@@ -88,9 +88,6 @@ edutalkApp.controller('roomController', function($scope, DataService) {
   // Responsive containers
   var x = window.innerHeight;
   document.getElementById("remoteVideoContainer").style.height = x + "px";
-
-  // Initialize Videos
-  cRoom(e);
 });
 
 
