@@ -9,10 +9,10 @@
   <div class="row">
     <div class="row valign-wrapper">
       <div class="input-field col s6">
-        <input id="roomNumber" type="text" class="roomNo">
+        <input ng-model="roomID" id="roomNumber" type="text" class="roomNo">
         <label for="roomNumber">Enter Room Number</label>
       </div>
-      <a href="#/room" class="btn waves-effect waves-light col s2 createRoom" type="submit">Create Room</a>
+      <a ng-click="joinRoom(roomID)" class="btn waves-effect waves-light col s2 createRoom" type="submit">Create Room</a>
     </div>
   </div>
 </div>

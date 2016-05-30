@@ -59,6 +59,7 @@ io.on("connection", function(socket){
 					room: data,
 					status: "success"
 				});
+				console.log("Successfully create room");
 
 			}}catch (e){
 				console.log(e);
@@ -80,7 +81,7 @@ io.on("connection", function(socket){
 				io.sockets.in(room[data]).emit("feedback", "User " + data + " is in room + " + data + " now" );	
 				socket.broadcast.to(room[data]).emit("newUser", socket.userName);
 
-				console.log("Login successfully");
+				console.log("Join room successfully");
 			} else{
 
 				socket.emit("joinRoom", {
