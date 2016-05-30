@@ -90,7 +90,7 @@ edutalkApp.controller('roomController', function($scope, DataService) {
   document.getElementById("remoteVideoContainer").style.height = x + "px";
 
   // Initialize Videos
-
+  cRoom(e);
 });
 
 
