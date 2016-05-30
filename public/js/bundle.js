@@ -132,6 +132,7 @@ PeerConnection.prototype.createVideo = function(peer, cb){
 		this.theirVideo = document.getElementById(this.theirVideoId);
 	}
 	this.yourVideo = document.getElementById("yours");
+	console.log(this.yourVideo);
 	cb();
 }
 
@@ -253,13 +254,15 @@ function WebRTC(server){
 			self.user = data.userName;
 			self.allConnection.init(data.userName, self.socket);
 		} else if (data.status === "fail"){
-			document.getElementById("feedback").value = "User " + data.userName + " already exists";
+			console.log(data.username);
+			//document.getElementById("feedback").value = "User " + data.userName + " already exists";
 		}
 		self.onLogin(data);
 	})
 
 	self.socket.on("feedback", function(data) {
-		document.getElementById("feedback").value = data;
+		//document.getElementById("feedback").value = data;
+		console.log(data);
 	})
 
 	self.socket.on("newUser", function(data) {
