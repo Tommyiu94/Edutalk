@@ -10,7 +10,7 @@ webrtc = new WebRTC("localhost:8080");
 webrtc.createRoom(roomName);
 ```
 
-## Callback after creating room
+### Callback after creating room
 ```javascript
 webrtc.onCreateRoom = function(data) {
 	if (data.status === "success") {
