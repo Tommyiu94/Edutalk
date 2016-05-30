@@ -7493,7 +7493,7 @@ function WebRTC(server){
 			peerList += data.allUser[i] + " ";
 			console.log("peerList is " + peerList);
 		}
-		document.getElementById("peer").value = peerList;
+		console.log = peerList;
 	})
 
 	self.socket.on("createRoom", function(data){
@@ -7510,13 +7510,13 @@ function WebRTC(server){
 			self.user = data.userName;
 			self.allConnection.init(data.userName, self.socket);
 		} else if (data.status === "fail"){
-			document.getElementById("feedback").value = "User " + data.userName + " already exists";
+			console.log = "User " + data.userName + " already exists";
 		}
 		self.onLogin(data);
 	})
 
 	self.socket.on("feedback", function(data) {
-		document.getElementById("feedback").value = data;
+		console.log("feedback: " + data);
 	})
 
 	self.socket.on("newUser", function(data) {
