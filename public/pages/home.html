@@ -13,14 +13,14 @@
     <div class="row">
       <div class="col s12">
         <div class="row input-field col s12">
-          <input id="staffUser" type="text">
+          <input id="staffUser" type="text" ng-model="username">
           <label for="staffUser">Enter your username here</label>
         </div>
       </div>
     </div>
   </div>
   <div class="modal-footer">
-    <a href="#/staff" class="btn modal-action modal-close waves-effect waves-green">Login >></a>
+    <a href="#/staff" ng-click="login()" class="btn modal-action modal-close waves-effect waves-green">Login >></a>
   </div>
 </div>
 <!-- Student Login Modal -->
@@ -31,13 +31,13 @@
     <div class="row">
       <div class="col s12">
         <div class="row input-field col s12">
-          <input id="studentUser" type="text">
+          <input id="studentUser" type="text" ng-model="username">
           <label for="studentUser">Enter your username here</label>
         </div>
       </div>
     </div>
   </div>
   <div class="modal-footer">
-    <a href="#/student" class="btn modal-action modal-close waves-effect waves-green">Login >></a>
+    <a href="#/student" ng-click="login()" class="btn modal-action modal-close waves-effect waves-green">Login >></a>
   </div>
 </div>
