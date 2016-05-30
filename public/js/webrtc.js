@@ -1,11 +1,12 @@
+//var io = require('./node_modules/socket.io/node_modules/socket.io-client/socket.io.js');
+var AllConnection = require('./AllConnection');
 var socket = io('http://localhost:8080');
-//var AllConnection = require('./AllConnection');
 
 function WebRTC(){
 	var self = this;
 	var user;
 	var allConnection;
-	
+
 	socket.on("createRoom", function(data){
 		self.onCreateRoom(data);
 	})
@@ -78,4 +79,4 @@ WebRTC.prototype.joinRoom = function(roomId) {
 			socket.emit("joinRoom", roomId);
 }
 
-//module.exports = WebRTC;
+module.exports = WebRTC;

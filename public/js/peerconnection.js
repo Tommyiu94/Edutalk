@@ -1,7 +1,7 @@
-//var Indicator = require('./Indicator');
+var Indicator = require('./Indicator');
+var socket = io('http://localhost:8080');
 
 function PeerConnection(local, peer){
-	var user;
 	var yourVideo;
 	var theirVideo;
 	var theirVideoId;
@@ -9,12 +9,11 @@ function PeerConnection(local, peer){
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
 	};
-	var remote;
 	var p2pConnection;
 	var indicator;
 	this.user = local;
 	this.remote = peer;
-	var indicator = new Indicator();
+	this.indicator = new Indicator();
 }
 
 PeerConnection.prototype.createVideo = function(peer, cb){
@@ -113,4 +112,4 @@ PeerConnection.prototype.addCandidate = function(data) {
 	this.p2pConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
 }
 
-//module.exports = PeerConnection;
+module.exports = PeerConnection;

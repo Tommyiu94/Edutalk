@@ -18,4 +18,4 @@ Indicator.prototype.hasRTCPeerConnection = function() {
 	return !!window.RTCPeerConnection;
 }
 
-//module.exports = Indicator;
+module.exports = Indicator;

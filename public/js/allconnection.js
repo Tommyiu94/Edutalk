@@ -1,4 +1,5 @@
-//var PeerConnection = require('./PeerConnection');
+var PeerConnection = require('./PeerConnection');
+var socket = io('http://localhost:8080');
 
 function AllConnection(){
 	var local;
@@ -71,4 +72,4 @@ AllConnection.prototype.onCandidate = function(data){
 	this.connection[data.remote].addCandidate(data);
 }
 
-//module.exports = AllConnection;
+module.exports = AllConnection;
