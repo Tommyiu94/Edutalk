@@ -1,23 +1,13 @@
 ## How to use WebRTC Library
 
-## To initialize
+### To initialize
 ```javascript
 webrtc = new WebRTC("localhost:8080");
 ```
 
-## To create room
+### To create a new room
 ```javascript
-webrtc.createRoom(command);
-```
-
-```javascript
-webrtc.onJoinRoom = function(data) {
-	if (data.status === "success") {
-	} else if (data.status === "fail") {
-		document.getElementById("feedback").value = "Room " + data.room
-		+ " does not exist";
-	}
-};
+webrtc.createRoom(roomName);
 ```
 
 ## Callback after creating room
@@ -33,8 +23,30 @@ webrtc.onCreateRoom = function(data) {
 };
 
 ```
-
+### To join a room
+```javascript
+webrtc.joinRoom(command);
 ```
+
+### Callback after joining room
+```javascript
+webrtc.onJoinRoom = function(data) {
+	if (data.status === "success") {
+	} else if (data.status === "fail") {
+		document.getElementById("feedback").value = "Room " + data.room
+		+ " does not exist";
+	}
+};
+```
+
+
+### To login
+```javascript
+webrtc.sendUserName(username);
+```
+
+### Callback after logging in
+```javascript
 webrtc.onLogin = function(data) {
 	if (data.status === "success") {
 		document.getElementById("feedback").value = "You successfully login";
@@ -42,59 +54,16 @@ webrtc.onLogin = function(data) {
 		document.getElementById("feedback").value = "Current account already exists";
 	}
 };
-
 ```
-function muteVideo(){
-	webrtc.muteVideo();
-}
-function muteAudio(){
-	webrtc.muteAudio();
-}
-function unmuteVideo(){
-	webrtc.unmuteVideo();
-}
-function unmuteAudio(){
-	webrtc.unmuteAudio();
-}
+### Mute
+```javascript
+webrtc.muteVideo();
+webrtc.muteAudio();
+webrtc.unmuteVideo();
+webrtc.unmuteVideo();
+```
 
-
-function sendName(e){
-	if (e.keyCode == 13) {
-		var command = document.getElementById("command").value;
-		if (command.length == 0)
-			document.getElementById("feedback").value = "Input a valid command";
-		else {
-			console.log(command);
-			webrtc.sendUserName(command);
-			document.getElementById("command").value = "";
-		}
-	}
-}
-
-function cRoom(e){
-	if (e.keyCode == 13) {
-		var command = document.getElementById("createroom").value;
-		if (command.length == 0)
-			document.getElementById("feedback").value = "Input a valid command";
-		else {
-			webrtc.createRoom(command);
-			document.getElementById("createroom").value = "";
-		}
-	}
-}
-
-function jRoom(e){	
-	if (e.keyCode == 13) {
-		var command = document.getElementById("joinroom").value;
-		if (command.length == 0)
-			document.getElementById("feedback").value = "Input a valid command";
-		else {
-			webrtc.joinRoom(command);
-			document.getElementById("joinroom").value = "";
-		}
-	}
-}
-
-function getPeers(){	
-	webrtc.getPeers();
-}
+### To get the information of the peers in the room
+```javascript
+webrtc.getPeers();
+```
