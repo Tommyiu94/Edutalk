@@ -31,6 +31,7 @@ function WebRTC(server){
 				remote: data,
 				ICESetupStatus: "DONE"
 			});
+			console.log(data);
 			console.log("ICE setup Ready");
 		});
 	})
@@ -53,7 +54,7 @@ function WebRTC(server){
 		console.log(data.remote);
 		self.allConnection.initConnection(data.remote);
 	})
-	
+
 	self.socket.on("disconnectedUser", function(data) {
 		console.log("user " + data + " is disconnected");
 		self.allConnection.connection[data] = null;
@@ -88,8 +89,20 @@ WebRTC.prototype.createRoom = function(roomId, successCallback, failCallback){
 
 WebRTC.prototype.startCamera = function(){
 	var self = this;
-	self.allConnection = new AllConnection();
-	self.allConnection.init(self.user, self.socket);
+	try {
+		self.allConnection = new AllConnection();
+		self.allConnection.init(self.user, self.socket, function(){
+			self.socket.emit("setupCamera", {
+				type: "setupCamera",
+				cameraSetupStatus: "success"
+			});
+		});
+	}catch(e){
+		self.socket.emit("setupCamera", {
+			type: "setupCamera",
+			cameraSetupStatus: "fail"
+		});
+	}
 }
 
 WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
@@ -106,9 +119,9 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 
 WebRTC.prototype.muteVideo = function(vid){
 	vid.pause();
-  vid.src = "";
-  stream.getTracks()[0].stop();
-  console.log("Vid off");
+	vid.src = "";
+	stream.getTracks()[0].stop();
+	console.log("Vid off");
 }
 
 WebRTC.prototype.muteAudio = function(){

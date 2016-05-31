@@ -51,7 +51,7 @@ io.on("connection", function(socket){
 				room[data] = data;
 				user[socket.userName].room =data; 
 				user[socket.userName].join(room[data]); 
-				
+
 				socket.emit("createRoom", {
 					type: "createRoom",
 					userName: socket.userName,
@@ -75,13 +75,8 @@ io.on("connection", function(socket){
 					userName: socket.userName,
 					status: "success"
 				});
-
-				io.sockets.in(room[data]).emit("feedback", "User " + data + " is in room + " + data + " now" );	
-				socket.broadcast.to(room[data]).emit("newUser", socket.userName);
-
-				console.log("Login successfully");
+				io.sockets.in(room[data]).emit("feedback", "User " + socket.userName + " is in room + " + data + " now" );	
 			} else{
-
 				socket.emit("joinRoom", {
 					type: "joinRoom",
 					userName: socket.userName,
@@ -93,6 +88,15 @@ io.on("connection", function(socket){
 				console.log(e);
 			}
 	})
+
+	socket.on("setupCamera", function(data)){
+		if (data.cameraSetupStatus === "success"){
+			socket.broadcast.to(room[socket.room]).emit("newUser", socket.userName);
+		}
+		else if (data.cameraSetupStatus === "fail"){
+			console.log(socket.userName + " failed to set up camera");
+		}
+	}
 
 	socket.on("peer", function(data){
 		try {

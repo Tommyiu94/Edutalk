@@ -14,7 +14,7 @@ function AllConnection(){
 	this.localVideo.autoplay = true;
 }
 
-AllConnection.prototype.init = function(user, socket){
+AllConnection.prototype.init = function(user, socket, cb){
 	var self = this;
 	this.local = user;
 	this.socket = socket;
@@ -23,6 +23,7 @@ AllConnection.prototype.init = function(user, socket){
 			self.localVideo.src = window.URL.createObjectURL(stream);
 			self.stream = stream;
 			console.log(stream);
+			cb();
 		}, function (error) {
 			console.log(error);
 		});
