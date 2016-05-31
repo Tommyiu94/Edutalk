@@ -1,24 +1,39 @@
 var PeerConnection = require('./PeerConnection');
+var Indicator = require('./Indicator');
 
 function AllConnection(){
-	var local;
 	var configuration = {
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
 	};
-	var connection;
-	var socket;
+	var local;
+	var stream;
+	this.connection = {};
+	this.indicator = new Indicator();
+	this.localVideo = document.getElementById("localVideo");
+	this.localVideo.autoplay = true;
 }
 
 AllConnection.prototype.init = function(user, socket){
+	var self = this;
 	this.local = user;
 	this.socket = socket;
-	this.connection = {};
+	if (this.indicator.hasUserMedia()) {
+		navigator.getUserMedia({ video: true, audio: false }, function (stream) {
+			self.localVideo.src = window.URL.createObjectURL(stream);
+			self.stream = stream;
+			console.log(stream);
+		}, function (error) {
+			console.log(error);
+		});
+	} else {
+		alert("Sorry, your browser does not support WebRTC.");
+	}
 }
 
 AllConnection.prototype.initConnection = function(peer){
 	var self = this;
-	self.connection[peer] = new PeerConnection(self.local, peer, self.socket);
+	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.stream);
 	console.log("local is " + self.local + " and peer is " + peer);
 	self.connection[peer].createVideo(peer, function(){
 		self.connection[peer].startConnection(peer, function(){
@@ -39,7 +54,7 @@ AllConnection.prototype.initConnection = function(peer){
 AllConnection.prototype.buildEnvironment = function(data, cb){
 	var self = this;
 	console.log(data);
-	self.connection[data] = new PeerConnection(self.local, data, self.socket);
+	self.connection[data] = new PeerConnection(self.local, data, self.socket, self.stream);
 	console.log("local is " + self.local + " and peer is " + data);
 	self.connection[data].createVideo(data, function(){
 		self.connection[data].startConnection(data, function(){

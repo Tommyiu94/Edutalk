@@ -1,25 +1,40 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.WebRTC = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var PeerConnection = require('./PeerConnection');
+var Indicator = require('./Indicator');
 
 function AllConnection(){
-	var local;
 	var configuration = {
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
 	};
-	var connection;
-	var socket;
+	var local;
+	var stream;
+	this.connection = {};
+	this.indicator = new Indicator();
+	this.localVideo = document.getElementById("localVideo");
+	this.localVideo.autoplay = true;
 }
 
 AllConnection.prototype.init = function(user, socket){
+	var self = this;
 	this.local = user;
 	this.socket = socket;
-	this.connection = {};
+	if (this.indicator.hasUserMedia()) {
+		navigator.getUserMedia({ video: true, audio: false }, function (stream) {
+			self.localVideo.src = window.URL.createObjectURL(stream);
+			self.stream = stream;
+			console.log(stream);
+		}, function (error) {
+			console.log(error);
+		});
+	} else {
+		alert("Sorry, your browser does not support WebRTC.");
+	}
 }
 
 AllConnection.prototype.initConnection = function(peer){
 	var self = this;
-	self.connection[peer] = new PeerConnection(self.local, peer, self.socket);
+	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.stream);
 	console.log("local is " + self.local + " and peer is " + peer);
 	self.connection[peer].createVideo(peer, function(){
 		self.connection[peer].startConnection(peer, function(){
@@ -40,7 +55,7 @@ AllConnection.prototype.initConnection = function(peer){
 AllConnection.prototype.buildEnvironment = function(data, cb){
 	var self = this;
 	console.log(data);
-	self.connection[data] = new PeerConnection(self.local, data, self.socket);
+	self.connection[data] = new PeerConnection(self.local, data, self.socket, self.stream);
 	console.log("local is " + self.local + " and peer is " + data);
 	self.connection[data].createVideo(data, function(){
 		self.connection[data].startConnection(data, function(){
@@ -77,7 +92,7 @@ AllConnection.prototype.onCandidate = function(data){
 }
 
 module.exports = AllConnection;
-},{"./PeerConnection":3}],2:[function(require,module,exports){
+},{"./Indicator":2,"./PeerConnection":3}],2:[function(require,module,exports){
 function Indicator(){}
 
 Indicator.prototype.hasUserMedia = function(){
@@ -100,22 +115,22 @@ Indicator.prototype.hasRTCPeerConnection = function() {
 
 module.exports = Indicator;
 },{}],3:[function(require,module,exports){
-var Indicator = require('./Indicator');
 
-function PeerConnection(local, peer, socket){
-	var yourVideo;
+function PeerConnection(local, peer, socket, stream){
 	var theirVideo;
 	var theirVideoId;
 	var p2pConnection;
 	var indicator;
+	this.stream = stream;
 	this.user = local;
 	this.remote = peer;
-	this.indicator = new Indicator();
 	this.socket = socket;
 	this.configuration = {
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
 	};
+	console.log("stream is ");
+	console.log(this.stream);
 }
 
 /*PeerConnection.prototype.setLocalVideo = function(ourVideoId){
@@ -134,17 +149,15 @@ PeerConnection.prototype.createVideo = function(peer, cb){
 		this.theirVideo = document.getElementById(this.theirVideoId);
 //		this.onVideoAdded(this.theirVideo);
 	}
-	this.yourVideo = document.getElementById("localVideo");
-	this.yourVideo.autoplay = true;
 	cb();
 }
 
 
-PeerConnection.prototype.setupPeerConnection = function(peer, stream) {
+PeerConnection.prototype.setupPeerConnection = function(peer) {
 	console.log("setupICEConnection: peer is " + peer);
 	var self = this;
 	// Setup stream listening
-	this.p2pConnection.addStream(stream);
+	this.p2pConnection.addStream(self.stream);
 	this.p2pConnection.onaddstream = function (e) {
 		self.theirVideo.src = window.URL.createObjectURL(e.stream);
 	};
@@ -166,22 +179,8 @@ PeerConnection.prototype.setupPeerConnection = function(peer, stream) {
 PeerConnection.prototype.startConnection = function(peer, cb){
 	var self = this;
 	this.p2pConnection = new RTCPeerConnection(this.configuration);
-	console.log(this.p2pConnection);
-	if (self.indicator.hasUserMedia()) {
-		navigator.getUserMedia({ video: true, audio: false }, function (stream) {
-			self.yourVideo.src = window.URL.createObjectURL(stream);
-			if (self.indicator.hasRTCPeerConnection()) {
-				self.setupPeerConnection(peer, stream);
-				cb();
-			} else {
-				alert("Sorry, your browser does not support WebRTC.");
-			}
-		}, function (error) {
-			console.log(error);
-		});
-	} else {
-		alert("Sorry, your browser does not support WebRTC.");
-	}
+	this.setupPeerConnection(peer);
+	cb();
 }
 
 PeerConnection.prototype.makeOffer = function(cb)	{
@@ -204,7 +203,7 @@ PeerConnection.prototype.receiveOffer = function(data, cb){
 		},function(error){
 			console.log(error);
 		});
-	}, function(){});
+	});
 }
 
 PeerConnection.prototype.receiveAnswer = function(data){
@@ -214,7 +213,7 @@ PeerConnection.prototype.receiveAnswer = function(data){
 	}else {
 		console.log(SDPAnswer);
 	}
-	this.p2pConnection.setRemoteDescription(SDPAnswer,function(){}, function(){});
+	this.p2pConnection.setRemoteDescription(SDPAnswer);
 	console.log(this.p2pConnection.localDescription);
 	console.log(this.p2pConnection.remoteDescription);
 }
@@ -224,7 +223,7 @@ PeerConnection.prototype.addCandidate = function(data) {
 }
 
 module.exports = PeerConnection;
-},{"./Indicator":2}],4:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 var AllConnection = require('./AllConnection');
 
 function WebRTC(server){
@@ -293,9 +292,7 @@ WebRTC.prototype.login = function(userName, successCallback, failCallback) {
 	this.socket.emit("login", userName);
 	this.socket.on("login", function(data){
 		if (data.status === "success") {
-			self.allConnection = new AllConnection();
 			self.user = data.userName;
-			self.allConnection.init(data.userName, self.socket);
 			successCallback();
 		} else if (data.status === "fail") {
 			failCallback();
@@ -308,6 +305,8 @@ WebRTC.prototype.createRoom = function(roomId, successCallback, failCallback){
 	this.socket.emit("createRoom", roomId);
 	this.socket.on("createRoom", function(data){
 		if (data.status === "success") {
+			self.allConnection = new AllConnection();
+			self.allConnection.init(data.userName, self.socket);
 			successCallback();
 		} else if (data.status === "fail") {
 			failCallback();
@@ -320,6 +319,8 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	this.socket.emit("joinRoom", roomId);
 	this.socket.on("joinRoom", function(data){
 		if (data.status === "success") {
+			self.allConnection = new AllConnection();
+			self.allConnection.init(data.userName, self.socket);
 			successCallback();
 		} else if (data.status === "fail") {
 			failCallback();
