@@ -164,8 +164,10 @@ io.on("connection", function(socket){
 	})
 
 	socket.on("disconnect", function(){
-		console.log("socketId is " + socket.id);
-		console.log("user is " + socket.userName);
+		console.log("user " + socket.userName + " is disconnected");
+		console.log("room is " + socket.room);
+		socket.broadcast.to(socket.room).emit("disconnectedUser", socket.userName);
+		user[socket.userName] = null;
 	})
 
 	socket.on("ICESetupStatus", function(data){

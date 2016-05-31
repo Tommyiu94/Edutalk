@@ -14,6 +14,13 @@ function unmuteAudio(){
 }
 
 
+webrtc.onUserDisconnect = function(userDisconnected){
+	console.log("user " + userDisconnected + " is disconnected");
+	var videoId = "peer_" + userDisconnected;
+	var video = document.getElementById(videoId);
+	video.parentNode.removeChild(video);
+}
+
 function sendName(e){
 	if (e.keyCode == 13) {
 		var command = document.getElementById("command").value;

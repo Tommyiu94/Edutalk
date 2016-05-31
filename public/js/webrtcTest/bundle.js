@@ -106,16 +106,16 @@ function PeerConnection(local, peer, socket){
 	var yourVideo;
 	var theirVideo;
 	var theirVideoId;
-	var configuration = {
-			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
-			}]
-	};
 	var p2pConnection;
 	var indicator;
 	this.user = local;
 	this.remote = peer;
 	this.indicator = new Indicator();
 	this.socket = socket;
+	this.configuration = {
+			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
+			}]
+	};
 }
 
 /*PeerConnection.prototype.setLocalVideo = function(ourVideoId){
@@ -280,6 +280,12 @@ function WebRTC(server){
 		console.log(data.remote);
 		self.allConnection.initConnection(data.remote);
 	})
+	
+	self.socket.on("disconnectedUser", function(data) {
+		console.log("user " + data + " is disconnected");
+		self.allConnection.connection[data] = null;
+		self.onUserDisconnect(data);
+	})
 }
 
 WebRTC.prototype.login = function(userName, successCallback, failCallback) {
@@ -341,6 +347,9 @@ WebRTC.prototype.getPeers = function(){
 	var self = this;
 	console.log("user is " + self.user);
 	this.socket.emit("peer", self.user);
+}
+
+WebRTC.prototype.onUserDisconnect = function(data){
 }
 
 module.exports = WebRTC;
