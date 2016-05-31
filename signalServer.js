@@ -3,7 +3,7 @@ var io = require("socket.io")(app);
 var user = {};
 var room = {};
 
-app.listen(8080);
+app.listen(8888);
 
 io.on("connection", function(socket){
 
