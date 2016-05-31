@@ -122,7 +122,7 @@ function PeerConnection(local, peer, socket){
 	this.yourVideo = document.getElementById("ourVideoId"):
 }*/
 
-PeerConnection.prototype.createVideo = function(theirVideoId, cb){
+PeerConnection.prototype.createVideo = function(peer, cb){
 	var remotes = document.getElementById("remoteVideoContainer");
 	if (remotes) {
 		var remoteVideo = document.createElement("video");

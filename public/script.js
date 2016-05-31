@@ -60,6 +60,9 @@ edutalkApp.factory('DataService', function() {
 
 // Controller for home.html
 edutalkApp.controller('mainController', function($scope, DataService, WebRTCService) {
+  // Configure background color (body)
+  document.body.style.backgroundColor="black";
+
   // Initialize WebRTC Service Object
   var webrtc = WebRTCService.initWebRTC('localhost:8888');
 
@@ -93,15 +96,15 @@ edutalkApp.controller('mainController', function($scope, DataService, WebRTCServ
 
 // Controller for staff.html
 edutalkApp.controller('staffController', function($scope, $location, DataService, WebRTCService) {
-  //Get WebRTC Service Object
+  // Configure background color (body)
+  document.body.style.backgroundColor="white";
 
   //TODO: Error Handling of joining room
   var joinRoom = function(roomID){
-	console.log(roomID);
+	  console.log(roomID);
   	var webrtc = WebRTCService.getWebRTC();
-
-	webrtc.createRoom(roomID);
-	$location.path('/room/' + roomID);
+	  webrtc.createRoom(roomID);
+	  $location.path('/room/' + roomID);
   };
 
   $scope.joinRoom = joinRoom;
@@ -109,15 +112,24 @@ edutalkApp.controller('staffController', function($scope, $location, DataService
 });
 
 // Controller for student.html
-edutalkApp.controller('studentController', function($scope, DataService) {
-  // get username from DataService (.factory)
-  var username = DataService.getUsername();
-  $scope.username = username;
+edutalkApp.controller('studentController', function($scope, $location, DataService, WebRTCService) {
+  // Configure background color (body)
+  document.body.style.backgroundColor="white";
+  var joinRoom = function(roomID) {
+    console.log(roomID);
+    var webrtc = WebRTCService.getWebRTC();
+    webrtc.createRoom(roomID);
+    $location.path('/room/' + roomID);
+  }
+
+  $scope.joinRoom = joinroom;
 
 });
 
 // Controller for room.html
 edutalkApp.controller('roomController', function($scope, DataService, WebRTCService, $routeParams) {
+  // Configure background color (body)
+  document.body.style.backgroundColor="black";
   // Get WebRTC Service Object
   var webrtc = WebRTCService.getWebRTC();
   var username = DataService.getUsername();
@@ -128,7 +140,6 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   // Responsive containers
   var x = window.innerHeight;
   document.getElementById("remoteVideoContainer").style.height = x + "px";
-
 });
 
 
