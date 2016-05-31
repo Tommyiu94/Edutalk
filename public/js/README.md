@@ -55,6 +55,23 @@ webrtc.onLogin = function(data) {
 	}
 };
 ```
+### To load local stream
+Set your local video element id 
+```html
+<video id="localVideo"></video>
+```
+
+### To load remote streams
+Set your remote video container div 
+```html
+<div id="remoteVideoContainer"></div>
+```
+All of remote video elements will have class "remote"
+```html
+<video class="remote"></video>
+```
+
+
 ### Mute
 ```javascript
 webrtc.muteVideo();
