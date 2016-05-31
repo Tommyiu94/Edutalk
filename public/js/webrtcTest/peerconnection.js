@@ -1,19 +1,19 @@
-var Indicator = require('./Indicator');
 
-function PeerConnection(local, peer, socket){
-	var yourVideo;
+function PeerConnection(local, peer, socket, stream){
 	var theirVideo;
 	var theirVideoId;
 	var p2pConnection;
 	var indicator;
+	this.stream = stream;
 	this.user = local;
 	this.remote = peer;
-	this.indicator = new Indicator();
 	this.socket = socket;
 	this.configuration = {
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
 	};
+	console.log("stream is ");
+	console.log(this.stream);
 }
 
 /*PeerConnection.prototype.setLocalVideo = function(ourVideoId){
@@ -32,17 +32,15 @@ PeerConnection.prototype.createVideo = function(peer, cb){
 		this.theirVideo = document.getElementById(this.theirVideoId);
 //		this.onVideoAdded(this.theirVideo);
 	}
-	this.yourVideo = document.getElementById("localVideo");
-	this.yourVideo.autoplay = true;
 	cb();
 }
 
 
-PeerConnection.prototype.setupPeerConnection = function(peer, stream) {
+PeerConnection.prototype.setupPeerConnection = function(peer) {
 	console.log("setupICEConnection: peer is " + peer);
 	var self = this;
 	// Setup stream listening
-	this.p2pConnection.addStream(stream);
+	this.p2pConnection.addStream(self.stream);
 	this.p2pConnection.onaddstream = function (e) {
 		self.theirVideo.src = window.URL.createObjectURL(e.stream);
 	};
@@ -64,22 +62,8 @@ PeerConnection.prototype.setupPeerConnection = function(peer, stream) {
 PeerConnection.prototype.startConnection = function(peer, cb){
 	var self = this;
 	this.p2pConnection = new RTCPeerConnection(this.configuration);
-	console.log(this.p2pConnection);
-	if (self.indicator.hasUserMedia()) {
-		navigator.getUserMedia({ video: true, audio: false }, function (stream) {
-			self.yourVideo.src = window.URL.createObjectURL(stream);
-			if (self.indicator.hasRTCPeerConnection()) {
-				self.setupPeerConnection(peer, stream);
-				cb();
-			} else {
-				alert("Sorry, your browser does not support WebRTC.");
-			}
-		}, function (error) {
-			console.log(error);
-		});
-	} else {
-		alert("Sorry, your browser does not support WebRTC.");
-	}
+	this.setupPeerConnection(peer);
+	cb();
 }
 
 PeerConnection.prototype.makeOffer = function(cb)	{

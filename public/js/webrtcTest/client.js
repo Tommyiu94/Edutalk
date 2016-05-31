@@ -44,6 +44,7 @@ function cRoom(e){
 			document.getElementById("feedback").value = "Input a valid command";
 		else {
 			webrtc.createRoom(command, function(){
+				webrtc.startCamera();
 				document.getElementById("feedback").value = "You successfully created Room ";
 			}, function(){
 				document.getElementById("feedback").value = "Current room already exists" ;
@@ -60,6 +61,7 @@ function jRoom(e){
 			document.getElementById("feedback").value = "Input a valid command";
 		else {
 			webrtc.joinRoom(command, function(){
+				webrtc.startCamera();
 				document.getElementById("feedback").value = "You successfully joined Room ";
 			}, function(){
 				document.getElementById("feedback").value = "Room does not exists" ;
