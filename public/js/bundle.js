@@ -127,11 +127,12 @@ PeerConnection.prototype.createVideo = function(peer, cb){
 		remoteVideo.className = "remoteVideo";
 		remoteVideo.id = "theirConnection" + peer;
 		this.theirVideoId = remoteVideo.id;
-		remoteVideo.autoPlay = true;
+		remoteVideo.autoplay = true;
 		remotes.appendChild(remoteVideo);
 		this.theirVideo = document.getElementById(this.theirVideoId);
 	}
 	this.yourVideo = document.getElementById("yours");
+	this.yourVideo.autoplay = true;
 	cb();
 }
 
