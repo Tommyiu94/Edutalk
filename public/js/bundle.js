@@ -1,6 +1,5 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.WebRTC = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var PeerConnection = require('./PeerConnection');
-//var socket = io('http://localhost:8080');
 
 function AllConnection(){
 	var local;
@@ -102,7 +101,6 @@ Indicator.prototype.hasRTCPeerConnection = function() {
 module.exports = Indicator;
 },{}],3:[function(require,module,exports){
 var Indicator = require('./Indicator');
-//var socket = io('http://localhost:8080');
 
 function PeerConnection(local, peer, socket){
 	var yourVideo;
@@ -120,18 +118,22 @@ function PeerConnection(local, peer, socket){
 	this.socket = socket;
 }
 
-PeerConnection.prototype.createVideo = function(peer, cb){
+/*PeerConnection.prototype.setLocalVideo = function(ourVideoId){
+	this.yourVideo = document.getElementById("ourVideoId"):
+}*/
+
+PeerConnection.prototype.createVideo = function(theirVideoId, cb){
 	var remotes = document.getElementById("remoteVideoContainer");
 	if (remotes) {
 		var remoteVideo = document.createElement("video");
-		remoteVideo.className = "remoteVideo";
-		remoteVideo.id = "theirConnection" + peer;
+		remoteVideo.className = "remote";
+		remoteVideo.id = "peer_" + peer;
 		this.theirVideoId = remoteVideo.id;
 		remoteVideo.autoplay = true;
 		remotes.appendChild(remoteVideo);
 		this.theirVideo = document.getElementById(this.theirVideoId);
 	}
-	this.yourVideo = document.getElementById("yours");
+	this.yourVideo = document.getElementById("localVideo");
 	this.yourVideo.autoplay = true;
 	cb();
 }
