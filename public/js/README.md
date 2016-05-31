@@ -20,6 +20,12 @@ webrtc.joinRoom(command, successCallback, failCallback);
 webrtc.login(username, successCallback, failCallback);
 ```
 
+### Responde when a specific user is disconnected
+```javascript
+webrtc.onUserDisconnect = function(userDisconnected){
+}
+```
+
 ### To load local stream
 Set your local video element id 
 ```html

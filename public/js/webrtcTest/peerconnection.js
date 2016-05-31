@@ -4,16 +4,16 @@ function PeerConnection(local, peer, socket){
 	var yourVideo;
 	var theirVideo;
 	var theirVideoId;
-	var configuration = {
-			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
-			}]
-	};
 	var p2pConnection;
 	var indicator;
 	this.user = local;
 	this.remote = peer;
 	this.indicator = new Indicator();
 	this.socket = socket;
+	this.configuration = {
+			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
+			}]
+	};
 }
 
 /*PeerConnection.prototype.setLocalVideo = function(ourVideoId){
