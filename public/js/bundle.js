@@ -132,11 +132,13 @@ PeerConnection.prototype.createVideo = function(peer, cb){
 		remoteVideo.autoplay = true;
 		remotes.appendChild(remoteVideo);
 		this.theirVideo = document.getElementById(this.theirVideoId);
+//		this.onVideoAdded(this.theirVideo);
 	}
 	this.yourVideo = document.getElementById("localVideo");
 	this.yourVideo.autoplay = true;
 	cb();
 }
+
 
 PeerConnection.prototype.setupPeerConnection = function(peer, stream) {
 	console.log("setupICEConnection: peer is " + peer);
@@ -230,7 +232,7 @@ function WebRTC(server){
 	var user;
 	var allConnection;
 	this.socket = io(server);
-	
+
 	self.socket.on("peer", function(data){
 		document.getElementById("peer").value = "";
 		console.log(data.allUser);
@@ -240,25 +242,6 @@ function WebRTC(server){
 			console.log("peerList is " + peerList);
 		}
 		console.log = peerList;
-	})
-
-	self.socket.on("createRoom", function(data){
-		self.onCreateRoom(data);
-	})
-
-	self.socket.on("joinRoom", function(data){
-		self.onJoinRoom(data);
-	})
-
-	self.socket.on("login", function(data) {
-		if (data.status === "success"){
-			self.allConnection = new AllConnection();
-			self.user = data.userName;
-			self.allConnection.init(data.userName, self.socket);
-		} else if (data.status === "fail"){
-			console.log = "User " + data.userName + " already exists";
-		}
-		self.onLogin(data);
 	})
 
 	self.socket.on("feedback", function(data) {
@@ -299,20 +282,43 @@ function WebRTC(server){
 	})
 }
 
-WebRTC.prototype.onCreateRoom = function(data){};
-WebRTC.prototype.onJoinRoom = function(data){};
-WebRTC.prototype.onLogin = function(data){};
-
-WebRTC.prototype.sendUserName = function(userName) {
+WebRTC.prototype.login = function(userName, successCallback, failCallback) {
+	var self = this;
 	this.socket.emit("login", userName);
+	this.socket.on("login", function(data){
+		if (data.status === "success") {
+			self.allConnection = new AllConnection();
+			self.user = data.userName;
+			self.allConnection.init(data.userName, self.socket);
+			successCallback();
+		} else if (data.status === "fail") {
+			failCallback();
+		}
+	});
 }
 
-WebRTC.prototype.createRoom = function(roomId) {
+WebRTC.prototype.createRoom = function(roomId, successCallback, failCallback){
+	var self = this;
 	this.socket.emit("createRoom", roomId);
+	this.socket.on("createRoom", function(data){
+		if (data.status === "success") {
+			successCallback();
+		} else if (data.status === "fail") {
+			failCallback();
+		}
+	});
 }
 
-WebRTC.prototype.joinRoom = function(roomId) {
+WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
+	var self = this;
 	this.socket.emit("joinRoom", roomId);
+	this.socket.on("joinRoom", function(data){
+		if (data.status === "success") {
+			successCallback();
+		} else if (data.status === "fail") {
+			failCallback();
+		}
+	});
 }
 
 WebRTC.prototype.muteVideo = function(){
