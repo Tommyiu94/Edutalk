@@ -1,4 +1,6 @@
 node_modules/**
+
 typings/**
+public/js/webrtcTest/node_modules/**
 
 
