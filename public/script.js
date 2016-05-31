@@ -230,7 +230,7 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
 edutalkApp.controller('broadcastController', function() {
 
   // Configure background color (body)
-  document.body.style.backgroundColor="black";
+  document.body.style.backgroundColor="white";
 
 
 });
