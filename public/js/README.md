@@ -26,6 +26,11 @@ webrtc.onUserDisconnect = function(userDisconnected){
 }
 ```
 
+### To start the local camera
+```javascript
+webrtc.startCamera();
+```
+
 ### To load local stream
 Set your local video element id 
 ```html
