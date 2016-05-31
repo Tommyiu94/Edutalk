@@ -163,7 +163,7 @@ PeerConnection.prototype.setupPeerConnection = function(peer, stream) {
 
 PeerConnection.prototype.startConnection = function(peer, cb){
 	var self = this;
-	this.p2pConnection = new webkitRTCPeerConnection(this.configuration);
+	this.p2pConnection = new RTCPeerConnection(this.configuration);
 	console.log(this.p2pConnection);
 	if (self.indicator.hasUserMedia()) {
 		navigator.getUserMedia({ video: true, audio: false }, function (stream) {
