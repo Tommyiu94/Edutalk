@@ -167,26 +167,17 @@ edutalkApp.controller('studentController', function($scope, $location, DataServi
   var joinRoom = function(roomID) {
 		var webrtc = WebRTCService.getWebRTC();
 
-	  webrtc.createRoom(roomID, onCreateSuccess, onCreateError);
+    onJoinSuccess = function() {
+      $location.path('/room/' + roomID);
+      $scope.$apply(); // Use to apply the rediction
+    };
 
-		onCreateSuccess = function(){
-	  	$location.path('/room/' + roomID);
-			$scope.$apply(); // Use to apply the rediction
-		};
+    onJoinError = function() {
+      alert("Room does not exist!");
+    };
 
-		onCreateError = function(){
-			webrtc.joinRoom(roomID, onJoinSuccess, onJoinError); 
-		};
-
-		onJoinSuccess = function(){
-	  	$location.path('/room/' + roomID);
-			$scope.$apply(); // Use to apply the rediction
-		};
-
-		onJoinError = function(){
-			alert("Unable to join the room");
-		};
-	};
+    webrtc.joinRoom(roomID, onJoinSuccess, onJoinError);
+  };
 
   $scope.joinRoom = joinRoom;
 
@@ -201,12 +192,42 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   // Get WebRTC Service Object
   var username = DataService.getUsername();
   var roomID = $routeParams.roomID;
+  var webrtc = WebRTCService.getWebRTC();
 
   // Responsive containers
   var x = window.innerHeight;
   document.getElementById("remoteVideoContainer").style.height = x + "px";
 
   // Video Functions
+  var videoFullScreen = function() {
+    if (document.getElementById("fullscreen").getAttribute("fullscreenMode") == "disabled") {
+      document.getElementById("fullscreen").setAttribute("fullscreenMode", "enabled");
+      if (!document.fullscreenElement && !document.msFullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement) {
+        if (document.body.requestFullscreen) {
+          document.body.requestFullscreen();
+        } else if (document.body.msRequestFullscreen) {
+          document.body.msRequestFullscreen();
+        } else if (document.body.mozRequestFullScreen) {
+          document.body.mozRequestFullScreen();
+        } else if (document.body.webkitRequestFullscreen) {
+          document.body.webkitRequestFullscreen();
+        }
+      }
+    }
+    else if (document.getElementById("fullscreen").getAttribute("fullscreenMode") == "enabled") {
+      document.getElementById("fullscreen").setAttribute("fullscreenMode", "disabled");
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    }
+  };
+  $scope.videoFullScreen = videoFullScreen;
 
   // Responsive Videos on Peer Video Added
   var noOfRemoteVideo = document.getElementById("remoteVideoContainer").childNodes.length;
@@ -218,21 +239,28 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
     }
   });
 
-  // On Peer Video Removed
-  /* var scrollHeight = document.getElementById("remoteVideoContainer").scrollHeight;
-   var windowHeight = window.innerHeight;
-   if (scrollHeight == windowHeight) {
-   document.styleSheets[2].cssRules[6].style.width = "98%";
-   } */
+  // On user disconnect, remove peer video
+  webrtc.onUserDisconnect = function(username){
+    console.log("hi");
+    var remoteVideoContainer = document.getElementById("remoteVideoContainer");
+    var videoID = document.getElementById("peer_" + username);
+    if (remoteVideoContainer && videoID) {
+      remoteVideoContainer.removeChild(videoID);
+    }
 
+    // Responsive Videos on Peer Video Removed
+    var scrollHeight = document.getElementById("remoteVideoContainer").scrollHeight;
+    var windowHeight = window.innerHeight;
+    if (scrollHeight == windowHeight) {
+      document.styleSheets[2].cssRules[6].style.width = "98%";
+    }
+  }
 });
 
 edutalkApp.controller('broadcastController', function() {
 
   // Configure background color (body)
   document.body.style.backgroundColor="white";
-
-
 });
 
 
