@@ -2,6 +2,7 @@
 /**
  * Use this file to override Materialize files so you can update
  * the core Materialize files in the future
+    NOTE !!! INPUT STYLE RULES FROM TOP-BOTTOM. NEW RULES SHOULD ALWAYS BE PLACED ON THE BOTTOM.
 */
 
 .row .col.s2 {
