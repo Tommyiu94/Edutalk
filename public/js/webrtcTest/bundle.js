@@ -327,8 +327,11 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	});
 }
 
-WebRTC.prototype.muteVideo = function(){
-	webrtc.muteVideo();
+WebRTC.prototype.muteVideo = function(vid){
+	vid.pause();
+  vid.src = "";
+  stream.getTracks()[0].stop();
+  console.log("Vid off");
 }
 
 WebRTC.prototype.muteAudio = function(){

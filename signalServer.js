@@ -3,7 +3,7 @@ var io = require("socket.io")(app);
 var user = {};
 var room = {};
 
-app.listen(8888);
+app.listen(8080);
 
 io.on("connection", function(socket){
 
@@ -23,8 +23,8 @@ io.on("connection", function(socket){
 				console.log(data);
 				console.log("Login unsuccessfully");
 			} else{
-				socket.userName = data;
 				user[data] = socket;
+				user[data].userName = data;
 				socket.emit("login", {
 					type: "login",
 					userName: data,
@@ -48,18 +48,16 @@ io.on("connection", function(socket){
 					status: "fail"
 				});
 			} else{
-
-				socket.room = data;
 				room[data] = data;
-				socket.join(room[data]);
-
+				user[socket.userName].room =data; 
+				user[socket.userName].join(room[data]); 
+				
 				socket.emit("createRoom", {
 					type: "createRoom",
 					userName: socket.userName,
 					room: data,
 					status: "success"
 				});
-				console.log("Successfully create room");
 
 			}}catch (e){
 				console.log(e);
@@ -69,9 +67,9 @@ io.on("connection", function(socket){
 	socket.on("joinRoom", function(data){
 		try {
 			if (room[data]){
+				user[socket.userName].room = data;
+				user[socket.userName].join(room[data]);
 
-				socket.room = data;
-				socket.join(room[data]);
 				socket.emit("joinRoom", {
 					type: "joinRoom",
 					userName: socket.userName,
@@ -81,7 +79,7 @@ io.on("connection", function(socket){
 				io.sockets.in(room[data]).emit("feedback", "User " + data + " is in room + " + data + " now" );	
 				socket.broadcast.to(room[data]).emit("newUser", socket.userName);
 
-				console.log("Join room successfully");
+				console.log("Login successfully");
 			} else{
 
 				socket.emit("joinRoom", {
@@ -96,24 +94,23 @@ io.on("connection", function(socket){
 			}
 	})
 
-	socket.on("peer", function(){
+	socket.on("peer", function(data){
 		try {
+			console.log(data);
+			console.log(user[data]);
+			socket = user[data];
 			var clients = io.sockets.adapter.rooms[socket.room].sockets;   
-
+			var userList = {};
 			for (var clientId in clients ) {
-				console.log("client Id is " + clientId);
 				var clientSocket = io.sockets.connected[clientId];
-				console.log("client Username is " + clientSocket.userName);
-				var userList = {};
 				userList[clientSocket.userName] = clientSocket.userName;
 			}
-			
+
 			socket.emit("peer", {
 				type: "peer",
 				allUser: userList
 			});
 		} catch(e){
-			socket.emit("feedback", "Asking for peers failed");
 			console.log(e);
 		}
 	})
@@ -124,8 +121,7 @@ io.on("connection", function(socket){
 
 		try {
 			if (user[data.remote]){
-				socket = user[data.remote];
-				socket.emit("SDPOffer", {
+				user[data.remote].emit("SDPOffer", {
 					type: "SDPOffer",
 					local: data.remote,
 					remote: data.local,
@@ -144,13 +140,13 @@ io.on("connection", function(socket){
 
 		try {
 			if (user[data.remote]){
-				socket = user[data.remote];
-				socket.emit("SDPAnswer",{
+				user[data.remote].emit("SDPAnswer",{
 					type: "SDPAnswer",
 					local: data.remote,
 					remote: data.local,
 					answer: data.answer
 				});	
+
 			}else{
 				socket.emit("feedback", "Sending Answer: User does not exist or currently offline");
 			}} catch(e){
@@ -159,12 +155,7 @@ io.on("connection", function(socket){
 	})
 
 	socket.on("candidate", function(data){
-		console.log("candidate local is ");
-		console.log(data.local);
-		console.log("candidate remote is ");
-		console.log(data.remote);
-		socket = user[data.remote];
-		socket.emit("candidate", {
+		user[data.remote].emit("candidate", {
 			type: "candidate",
 			local: data.remote,
 			remote: data.local,
@@ -172,38 +163,23 @@ io.on("connection", function(socket){
 		});
 	})
 
-	socket.on("leave", function(data){
-
-		console.log(data[1] + " left");
-
-		try {
-			if (user[data[1]]){
-				socket =  user[data[2]];
-				socket.emit("feedback", "User " + data[1] + " is disconnected");
-				socket = user[data[1]];
-				socket.emit("feedback", "Disconnected successfully");	
-				user[data[1]] = null;
-				console.log("disconnected successfully");
-			}else{
-				socket.emit("feedback", "User does not exist or currently offline");
-			}} catch(e){
-				console.log(e);
-			}
+	socket.on("disconnect", function(){
+		console.log("user " + socket.userName + " is disconnected");
+		console.log("room is " + socket.room);
+		socket.broadcast.to(socket.room).emit("disconnectedUser", socket.userName);
+		user[socket.userName] = null;
 	})
 
 	socket.on("ICESetupStatus", function(data){
-		console.log("ok!");
-		console.log(data.local + " is Sending Status to " + data.remote);
-
 		try {
 			if (user[data.remote]){
-				socket = user[data.remote];
-				socket.emit("ICESetupStatus", {
+				user[data.remote].emit("ICESetupStatus", {
 					type: "ICESetupStatus",
 					local: data.remote,
 					remote: data.local,
 					offer: data.offer
 				});
+
 				console.log("remote is " + data.remote + "local is "+ data.local);
 			}else{
 				socket.emit("feedback", "Sending Status: User does not exist or currently offline");

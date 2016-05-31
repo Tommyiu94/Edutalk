@@ -1,7 +1,8 @@
 webrtc = new WebRTC("localhost:8080");
 
 function muteVideo(){
-	webrtc.muteVideo();
+	var video = document.getElementById("localVideo")
+	webrtc.muteVideo(video);
 }
 function muteAudio(){
 	webrtc.muteAudio();
@@ -12,7 +13,6 @@ function unmuteVideo(){
 function unmuteAudio(){
 	webrtc.unmuteAudio();
 }
-
 
 webrtc.onUserDisconnect = function(userDisconnected){
 	console.log("user " + userDisconnected + " is disconnected");
