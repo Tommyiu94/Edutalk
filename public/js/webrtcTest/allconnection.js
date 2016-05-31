@@ -37,15 +37,17 @@ AllConnection.prototype.initConnection = function(peer){
 	console.log("local is " + self.local + " and peer is " + peer);
 	self.connection[peer].createVideo(peer, function(){
 		self.connection[peer].startConnection(peer, function(){
-			self.connection[peer].makeOffer( function(offer){
-				console.log("send offer to " + peer);
-				console.log(offer);
-				self.socket.emit("SDPOffer", {
-					type: "SDPOffer",
-					local: self.local,
-					remote: peer,
-					offer: offer
-				});
+			self.connection[peer].setupPeerConnection(peer, function(){
+				self.connection[peer].makeOffer( function(offer){
+					console.log("send offer to " + peer);
+					console.log(offer);
+					self.socket.emit("SDPOffer", {
+						type: "SDPOffer",
+						local: self.local,
+						remote: peer,
+						offer: offer
+					});
+				})
 			})
 		})
 	})
@@ -58,7 +60,9 @@ AllConnection.prototype.buildEnvironment = function(data, cb){
 	console.log("local is " + self.local + " and peer is " + data);
 	self.connection[data].createVideo(data, function(){
 		self.connection[data].startConnection(data, function(){
-			cb();
+			self.connection[data].setupPeerConnection(data, function(){
+				cb();
+			});
 		});
 	});
 }

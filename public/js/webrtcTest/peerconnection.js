@@ -36,7 +36,7 @@ PeerConnection.prototype.createVideo = function(peer, cb){
 }
 
 
-PeerConnection.prototype.setupPeerConnection = function(peer) {
+PeerConnection.prototype.setupPeerConnection = function(peer, cb) {
 	console.log("setupICEConnection: peer is " + peer);
 	var self = this;
 	// Setup stream listening
@@ -57,12 +57,12 @@ PeerConnection.prototype.setupPeerConnection = function(peer) {
 			});
 		}
 	};
+	cb();
 }
 
 PeerConnection.prototype.startConnection = function(peer, cb){
 	var self = this;
 	this.p2pConnection = new RTCPeerConnection(this.configuration);
-	this.setupPeerConnection(peer);
 	cb();
 }
 

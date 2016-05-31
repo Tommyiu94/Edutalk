@@ -38,15 +38,17 @@ AllConnection.prototype.initConnection = function(peer){
 	console.log("local is " + self.local + " and peer is " + peer);
 	self.connection[peer].createVideo(peer, function(){
 		self.connection[peer].startConnection(peer, function(){
-			self.connection[peer].makeOffer( function(offer){
-				console.log("send offer to " + peer);
-				console.log(offer);
-				self.socket.emit("SDPOffer", {
-					type: "SDPOffer",
-					local: self.local,
-					remote: peer,
-					offer: offer
-				});
+			self.connection[peer].setupPeerConnection(peer, function(){
+				self.connection[peer].makeOffer( function(offer){
+					console.log("send offer to " + peer);
+					console.log(offer);
+					self.socket.emit("SDPOffer", {
+						type: "SDPOffer",
+						local: self.local,
+						remote: peer,
+						offer: offer
+					});
+				})
 			})
 		})
 	})
@@ -59,7 +61,9 @@ AllConnection.prototype.buildEnvironment = function(data, cb){
 	console.log("local is " + self.local + " and peer is " + data);
 	self.connection[data].createVideo(data, function(){
 		self.connection[data].startConnection(data, function(){
-			cb();
+			self.connection[data].setupPeerConnection(data, function(){
+				cb();
+			});
 		});
 	});
 }
@@ -153,7 +157,7 @@ PeerConnection.prototype.createVideo = function(peer, cb){
 }
 
 
-PeerConnection.prototype.setupPeerConnection = function(peer) {
+PeerConnection.prototype.setupPeerConnection = function(peer, cb) {
 	console.log("setupICEConnection: peer is " + peer);
 	var self = this;
 	// Setup stream listening
@@ -174,12 +178,12 @@ PeerConnection.prototype.setupPeerConnection = function(peer) {
 			});
 		}
 	};
+	cb();
 }
 
 PeerConnection.prototype.startConnection = function(peer, cb){
 	var self = this;
 	this.p2pConnection = new RTCPeerConnection(this.configuration);
-	this.setupPeerConnection(peer);
 	cb();
 }
 
