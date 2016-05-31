@@ -204,7 +204,7 @@ PeerConnection.prototype.receiveOffer = function(data, cb){
 		},function(error){
 			console.log(error);
 		});
-	});
+	}, function(){});
 }
 
 PeerConnection.prototype.receiveAnswer = function(data){
@@ -214,7 +214,7 @@ PeerConnection.prototype.receiveAnswer = function(data){
 	}else {
 		console.log(SDPAnswer);
 	}
-	this.p2pConnection.setRemoteDescription(SDPAnswer);
+	this.p2pConnection.setRemoteDescription(SDPAnswer,function(){}, function(){});
 	console.log(this.p2pConnection.localDescription);
 	console.log(this.p2pConnection.remoteDescription);
 }
