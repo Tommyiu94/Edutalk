@@ -66,9 +66,7 @@ WebRTC.prototype.login = function(userName, successCallback, failCallback) {
 	this.socket.emit("login", userName);
 	this.socket.on("login", function(data){
 		if (data.status === "success") {
-			self.allConnection = new AllConnection();
 			self.user = data.userName;
-			self.allConnection.init(data.userName, self.socket);
 			successCallback();
 		} else if (data.status === "fail") {
 			failCallback();
@@ -81,6 +79,8 @@ WebRTC.prototype.createRoom = function(roomId, successCallback, failCallback){
 	this.socket.emit("createRoom", roomId);
 	this.socket.on("createRoom", function(data){
 		if (data.status === "success") {
+			self.allConnection = new AllConnection();
+			self.allConnection.init(data.userName, self.socket);
 			successCallback();
 		} else if (data.status === "fail") {
 			failCallback();
@@ -93,6 +93,8 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	this.socket.emit("joinRoom", roomId);
 	this.socket.on("joinRoom", function(data){
 		if (data.status === "success") {
+			self.allConnection = new AllConnection();
+			self.allConnection.init(data.userName, self.socket);
 			successCallback();
 		} else if (data.status === "fail") {
 			failCallback();
