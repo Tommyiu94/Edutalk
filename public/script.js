@@ -42,10 +42,10 @@ edutalkApp.factory('WebRTCService', function(){
 
   return {
   	getWebRTC: function(){ return webrtc },
-	initWebRTC: function(signal){
-		webrtc = new WebRTC(signal);
-		return webrtc;
-	}
+		initWebRTC: function(signal){
+			webrtc = new WebRTC(signal);
+			return webrtc;
+		}
   }
 });
 
@@ -65,7 +65,7 @@ edutalkApp.factory('DataService', function() {
 });
 
 // Controller for home.html
-edutalkApp.controller('mainController', function($scope, DataService, WebRTCService) {
+edutalkApp.controller('mainController', function($scope, $location, DataService, WebRTCService) {
 
   // Configure background color (body)
   document.body.style.backgroundColor="black";
@@ -91,13 +91,36 @@ edutalkApp.controller('mainController', function($scope, DataService, WebRTCServ
   $scope.openStudentModal = openStudentModal;
 
   // Get username on user login
-  var login = function(){
-    DataService.setUsername($scope.username);
-	console.log('logging in ' + $scope.username);
-	webrtc.sendUserName($scope.username);
+  
+
+  onStaffLoginSuccess = function(){
+		console.log('logging in ' + $scope.username);
+		$location.path('/staff');
+		$scope.$apply(); // Use to apply the rediction
   };
 
-  $scope.login = login;
+  onStudentLoginSuccess = function(){
+		console.log('logging in ' + $scope.username);
+		$location.path('/student');
+		$scope.$apply(); // Use to apply the rediction
+  };
+
+  onLoginError = function(){
+  	alert('Bad username, please change to another one');
+  };
+
+	var staff_login = function(){
+    DataService.setUsername($scope.username);
+		webrtc.login($scope.username, onStaffLoginSuccess, onLoginError);
+  };
+
+  var student_login = function(){
+    DataService.setUsername($scope.username);
+		webrtc.login($scope.username, onStudentLoginSuccess, onLoginError);
+  };
+
+  $scope.staff_login = staff_login;
+  $scope.student_login = student_login;
 
 });
 
@@ -107,12 +130,28 @@ edutalkApp.controller('staffController', function($scope, $location, DataService
   // Configure background color (body)
   document.body.style.backgroundColor="white";
 
-  //TODO: Error Handling of joining room
-  var joinRoom = function(roomID){
-	  console.log(roomID);
+  var joinRoom = function(roomID) {
   	var webrtc = WebRTCService.getWebRTC();
-	  webrtc.createRoom(roomID);
-	  $location.path('/room/' + roomID);
+
+		onJoinSuccess = function() {
+	  	$location.path('/room/' + roomID);
+			$scope.$apply(); // Use to apply the rediction
+		};
+
+		onJoinError = function() {
+			alert("Unable to join the room");
+		};
+
+		onCreateSuccess = function() {
+	  	$location.path('/room/' + roomID);
+			$scope.$apply(); // Use to apply the rediction
+		};
+
+		onCreateError = function() {
+			webrtc.joinRoom(roomID, onJoinSuccess, onJoinError); 
+		};
+
+	  webrtc.createRoom(roomID, onCreateSuccess, onCreateError);
   };
 
   $scope.joinRoom = joinRoom;
@@ -126,11 +165,28 @@ edutalkApp.controller('studentController', function($scope, $location, DataServi
   document.body.style.backgroundColor="white";
 
   var joinRoom = function(roomID) {
-    console.log(roomID);
-    var webrtc = WebRTCService.getWebRTC();
-    webrtc.createRoom(roomID);
-    $location.path('/room/' + roomID);
-  };
+		var webrtc = WebRTCService.getWebRTC();
+
+	  webrtc.createRoom(roomID, onCreateSuccess, onCreateError);
+
+		onCreateSuccess = function(){
+	  	$location.path('/room/' + roomID);
+			$scope.$apply(); // Use to apply the rediction
+		};
+
+		onCreateError = function(){
+			webrtc.joinRoom(roomID, onJoinSuccess, onJoinError); 
+		};
+
+		onJoinSuccess = function(){
+	  	$location.path('/room/' + roomID);
+			$scope.$apply(); // Use to apply the rediction
+		};
+
+		onJoinError = function(){
+			alert("Unable to join the room");
+		};
+	};
 
   $scope.joinRoom = joinRoom;
 
@@ -143,11 +199,8 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   document.body.style.backgroundColor="black";
 
   // Get WebRTC Service Object
-  var webrtc = WebRTCService.getWebRTC();
   var username = DataService.getUsername();
   var roomID = $routeParams.roomID;
-
-  webrtc.joinRoom(roomID);
 
   // Responsive containers
   var x = window.innerHeight;
