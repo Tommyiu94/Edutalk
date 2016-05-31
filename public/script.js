@@ -193,6 +193,7 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   var username = DataService.getUsername();
   var roomID = $routeParams.roomID;
   var webrtc = WebRTCService.getWebRTC();
+	webrtc.startCamera();
 
   // Responsive containers
   var x = window.innerHeight;
