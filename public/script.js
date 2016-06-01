@@ -64,6 +64,19 @@ edutalkApp.factory('DataService', function() {
   }
 });
 
+edutalkApp.directive('ngEnter', function () {
+  return function (scope, element, attrs) {
+    element.bind("keydown keypress", function (event) {
+      if(event.which === 13) {
+        scope.$apply(function (){
+          scope.$eval(attrs.ngEnter);
+        });
+        event.preventDefault();
+      }
+    });
+  };
+});
+
 // Controller for home.html
 edutalkApp.controller('mainController', function($scope, $location, DataService, WebRTCService) {
 
@@ -267,8 +280,7 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   });
 
   // On user disconnect, remove peer video
-  webrtc.onUserDisconnect = function(username){
-    console.log("hi");
+  webrtc.onUserDisconnect = function(username) {
     var remoteVideoContainer = document.getElementById("remoteVideoContainer");
     var videoID = document.getElementById("peer_" + username);
     if (remoteVideoContainer && videoID) {
@@ -281,7 +293,46 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
     if (scrollHeight == windowHeight) {
       document.styleSheets[2].cssRules[6].style.width = "98%";
     }
-  }
+  };
+
+  // ChatBox functions
+  // Capture message input
+  var sendMessage = function() {
+    var message = $("#chatInput").val();
+    if (message.length != 0) {
+      webrtc.sendChatMessage(message);
+    }
+  };
+  $scope.sendMessage = sendMessage;
+
+  // On Message Sent
+  webrtc.onChatMessage = function(chatMessageData) {
+    console.log(chatMessageData);
+
+  };
+
+  // Toggle on/off Chat Window
+  var chatWindow = true; // is hidden
+  var showChat = function() {
+    if (chatWindow == true) {
+      $("#chatWindow").show();
+      chatWindow = false;
+    }
+    else {
+      $("#chatWindow").hide();
+      chatWindow = true;
+    }
+  };
+
+  $scope.showChat = showChat;
+
+  var messages = [
+   "Ben has joined the room",
+    "Jonathan has joined the room"
+  ];
+  $scope.messages = messages;
+
+  // Room Controller END
 });
 
 edutalkApp.controller('broadcastController', function() {

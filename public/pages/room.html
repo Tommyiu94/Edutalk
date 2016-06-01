@@ -18,7 +18,24 @@
   </ul>
 </div>
 
-<!-- Chatroom
+<!-- Chatroom -->
 <div class="chat">
-  <a class="waves-effect waves-light btn chatButton"><i class="material-icons right">chat_bubble</i>Chat</a>
-</div> -->
+  <table class="white striped bordered" id="chatWindow">
+    <tbody>
+    <tr ng-repeat="message in messages">
+      <td>{{message}}</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+      <td>
+        <div class="input-field">
+          <input ng-enter="sendMessage()" id="chatInput" type="text">
+          <label for="chatInput">Enter your message here</label>
+        </div>
+      </td>
+    </tr>
+    </tfoot>
+  </table>
+  <a ng-click="showChat()" class="waves-effect waves-light btn" id="chatButton"><i class="material-icons right">chat_bubble</i>Chat</a>
+</div>
