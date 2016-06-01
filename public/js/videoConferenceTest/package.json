@@ -4,7 +4,8 @@
   "description": "",
   "main": "main.js",
   "dependencies": {
-    "socket.io": "^1.4.6"
+    "socket.io": "^1.4.6",
+    "webrtcsupport": "^2.2.0"
   },
   "devDependencies": {},
   "scripts": {
