@@ -4,6 +4,10 @@ function WebRTC(server){
 	var self = this;
 	var user;
 	var allConnection;
+	var localMediaStream;
+	var audioTracks;
+	var videoTracks;
+
 	this.socket = io(server);
 
 	self.socket.on("peer", function(data){
@@ -92,10 +96,12 @@ WebRTC.prototype.startCamera = function(){
 	try {
 		self.allConnection = new AllConnection();
 		self.allConnection.init(self.user, self.socket, function(){
-			self.socket.emit("setupCamera", {
-				type: "setupCamera",
-				cameraSetupStatus: "success"
-			});
+			self.setLocalMediaStream(function(){
+				self.socket.emit("setupCamera", {
+					type: "setupCamera",
+					cameraSetupStatus: "success"
+				});
+			})
 		});
 	}catch(e){
 		self.socket.emit("setupCamera", {
@@ -117,23 +123,34 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	});
 }
 
-WebRTC.prototype.muteVideo = function(vid){
-	vid.pause();
-	vid.src = "";
-	stream.getTracks()[0].stop();
-	console.log("Vid off");
-}
-
-WebRTC.prototype.muteAudio = function(){
-	webrtc.muteAudio();
+WebRTC.prototype.muteVideo = function(){
+	if (this.videoTracks[0]) {
+		this.videoTracks[0].enabled = false;
+		console.log(this.videoTracks[0]);
+	}
 }
 
 WebRTC.prototype.unmuteVideo = function(){
-	webrtc.unmuteVideo();
+	if (this.videoTracks[0]) {
+		this.videoTracks[0].enabled = true;
+		console.log(this.videoTracks[0]);
+	}
+}
+
+WebRTC.prototype.muteAudio = function(){
+	if (this.audioTracks[0]) {
+		this.audioTracks[0].enabled = false;
+		console.log(this.audioTracks.length);
+	}
 }
 
 WebRTC.prototype.unmuteAudio = function(){
-	webrtc.unmuteAudio();
+	if (this.audioTracks[0]) {
+		this.audioTracks[0].enabled = true;
+		console.log(this.audioTracks[0]);
+		console.log(this.audioTracks[1]);
+		console.log(this.audioTracks[2]);
+	}
 }
 
 WebRTC.prototype.getPeers = function(){
@@ -143,6 +160,13 @@ WebRTC.prototype.getPeers = function(){
 }
 
 WebRTC.prototype.onUserDisconnect = function(data){
+}
+
+WebRTC.prototype.setLocalMediaStream = function(cb){
+	this.localMediaStream = this.allConnection.stream;
+	this.audioTracks = this.localMediaStream.getAudioTracks();
+	this.videoTracks = this.localMediaStream.getVideoTracks();
+	cb();
 }
 
 module.exports = WebRTC;

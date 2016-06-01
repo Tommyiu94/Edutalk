@@ -1,8 +1,7 @@
 webrtc = new WebRTC("localhost:8080");
 
 function muteVideo(){
-	var video = document.getElementById("localVideo")
-	webrtc.muteVideo(video);
+	webrtc.muteVideo();
 }
 function muteAudio(){
 	webrtc.muteAudio();

@@ -89,14 +89,14 @@ io.on("connection", function(socket){
 			}
 	})
 
-	socket.on("setupCamera", function(data)){
+	socket.on("setupCamera", function(data){
 		if (data.cameraSetupStatus === "success"){
 			socket.broadcast.to(room[socket.room]).emit("newUser", socket.userName);
 		}
 		else if (data.cameraSetupStatus === "fail"){
 			console.log(socket.userName + " failed to set up camera");
 		}
-	}
+	})
 
 	socket.on("peer", function(data){
 		try {

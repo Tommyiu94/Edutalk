@@ -19,7 +19,7 @@ AllConnection.prototype.init = function(user, socket, cb){
 	this.local = user;
 	this.socket = socket;
 	if (this.indicator.hasUserMedia()) {
-		navigator.getUserMedia({ video: true, audio: false }, function (stream) {
+		navigator.getUserMedia({ video: true, audio: true }, function (stream) {
 			self.localVideo.src = window.URL.createObjectURL(stream);
 			self.stream = stream;
 			console.log(stream);
