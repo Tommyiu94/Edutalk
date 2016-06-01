@@ -191,4 +191,14 @@ io.on("connection", function(socket){
 				console.log(e);
 			}
 	})
+
+	socket.on("chatMessage", function(data){
+		console.log(socket.userName + " send message");
+		io.sockets.in(socket.room).emit("chatMessage", {
+			type: "chatMessage",
+			sender: data.user,
+			content: data.content
+		});
+	})
+
 })

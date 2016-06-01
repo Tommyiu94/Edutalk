@@ -13,6 +13,18 @@ function unmuteAudio(){
 	webrtc.unmuteAudio();
 }
 
+function sendChatMessage(e){
+	if (e.keyCode == 13) {
+		var message = document.getElementById("chat").value;
+		webrtc.sendChatMessage(message);
+		document.getElementById("chat").value = "";
+	}
+}
+
+WebRTC.prototype.onChatMessage = function(chatMessageData){
+	document.getElementById("messageBox").value += chatMessageData.sender + ": " + chatMessageData.content;
+}
+
 webrtc.onUserDisconnect = function(userDisconnected){
 	console.log("user " + userDisconnected + " is disconnected");
 	var videoId = "peer_" + userDisconnected;

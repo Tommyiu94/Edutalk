@@ -38,13 +38,16 @@ video {
 		Join Room: <br /> <input type="text" id="joinroom"
 			onkeypress="jRoom(event)" /> <br /> Feedback: <br /> <input
 			type="text" id="feedback" /> <br /> All peers: <br /> <input
-			type="text" id="peer" />
+			type="text" id="peer" /><br /> Chat: <br /> <input type="text"
+			id="chat" onkeypress="sendChatMessage(event)" /><br />Message Box: <br />
+		<textarea id="messageBox"></textarea>
 	</form>
 	<button onclick="muteVideo()">mute video</button>
 	<button onclick="muteAudio()">mute audio</button>
 	<button onclick="unmuteVideo()">unmute video</button>
 	<button onclick="unmuteAudio()">unmute audio</button>
 	<button onclick="getPeers()">get peers</button>
+	<button onclick="sendChatMessage()">chat!</button>
 	<title>p2p video conference</title>
 
 	<div id="container">

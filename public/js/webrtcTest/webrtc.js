@@ -64,6 +64,10 @@ function WebRTC(server){
 		self.allConnection.connection[data] = null;
 		self.onUserDisconnect(data);
 	})
+
+	self.socket.on("chatMessage", function(data){
+		self.onChatMessage(data);
+	})
 }
 
 WebRTC.prototype.login = function(userName, successCallback, failCallback) {
@@ -140,6 +144,7 @@ WebRTC.prototype.unmuteVideo = function(){
 WebRTC.prototype.muteAudio = function(){
 	if (this.audioTracks[0]) {
 		this.audioTracks[0].enabled = false;
+		console.log(this.audioTracks[0]);
 		console.log(this.audioTracks.length);
 	}
 }
@@ -148,8 +153,6 @@ WebRTC.prototype.unmuteAudio = function(){
 	if (this.audioTracks[0]) {
 		this.audioTracks[0].enabled = true;
 		console.log(this.audioTracks[0]);
-		console.log(this.audioTracks[1]);
-		console.log(this.audioTracks[2]);
 	}
 }
 
@@ -167,6 +170,19 @@ WebRTC.prototype.setLocalMediaStream = function(cb){
 	this.audioTracks = this.localMediaStream.getAudioTracks();
 	this.videoTracks = this.localMediaStream.getVideoTracks();
 	cb();
+}
+
+WebRTC.prototype.sendChatMessage = function(chatMessage){
+	var self = this;
+	console.log("message is " + chatMessage);
+	this.socket.emit("chatMessage", {
+		type: "chatMessage",
+		user: self.user,
+		content: chatMessage
+	})
+}
+
+WebRTC.prototype.onChatMessage = function(chatMessageData){
 }
 
 module.exports = WebRTC;
