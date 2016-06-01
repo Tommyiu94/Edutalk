@@ -1,6 +1,10 @@
 node_modules/**
 
 typings/**
-public/js/webrtcTest/node_modules/**
+public/js/videoConferenceTest/node_modules/**
+
+
+
+public/js/broadcastTest/node_modules/**
 
 
