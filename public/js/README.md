@@ -37,6 +37,16 @@ Set your local video element id
 <video id="localVideo"></video>
 ```
 
+### To chat with other in message box
+```javascript
+webrtc.sendChatMessage(message);
+```
+```javascript
+WebRTC.prototype.onChatMessage(chatMessageData);
+//chatMessageData contain sender and content 
+```
+
+
 ### To load remote streams
 Set your remote video container div 
 ```html
@@ -50,8 +60,8 @@ All of remote video elements will have class "remote"
 
 ### Mute
 ```javascript
-webrtc.muteVideo();
-webrtc.muteAudio();
+webrtc.muteVideo();//working on
+webrtc.muteAudio();//working on
 webrtc.unmuteVideo();
 webrtc.unmuteVideo();
 ```
