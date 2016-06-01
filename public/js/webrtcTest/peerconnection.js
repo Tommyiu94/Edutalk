@@ -12,14 +12,9 @@ function PeerConnection(local, peer, socket, stream){
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
 	};
-	console.log("stream is ");
-	console.log(this.stream);
 }
 
-/*PeerConnection.prototype.setLocalVideo = function(ourVideoId){
-	this.yourVideo = document.getElementById("ourVideoId"):
-}*/
-
+//create a new video element in html for every peer connenction built
 PeerConnection.prototype.createVideo = function(peer, cb){
 	var remotes = document.getElementById("remoteVideoContainer");
 	if (remotes) {
@@ -30,14 +25,12 @@ PeerConnection.prototype.createVideo = function(peer, cb){
 		remoteVideo.autoplay = true;
 		remotes.appendChild(remoteVideo);
 		this.theirVideo = document.getElementById(this.theirVideoId);
-//		this.onVideoAdded(this.theirVideo);
 	}
 	cb();
 }
 
-
+//setup the p2p connection with a peer
 PeerConnection.prototype.setupPeerConnection = function(peer, cb) {
-	console.log("setupICEConnection: peer is " + peer);
 	var self = this;
 	// Setup stream listening
 	this.p2pConnection.addStream(self.stream);
@@ -48,7 +41,6 @@ PeerConnection.prototype.setupPeerConnection = function(peer, cb) {
 	// Setup ice handling
 	this.p2pConnection.onicecandidate = function (event) {
 		if (event.candidate) {
-			console.log( "ICECandidate peer is " + peer);
 			self.socket.emit("candidate", {
 				type: "candidate",
 				local: self.user,
@@ -60,25 +52,28 @@ PeerConnection.prototype.setupPeerConnection = function(peer, cb) {
 	cb();
 }
 
+//initialise p2pconnection at the start of a peer connection 
 PeerConnection.prototype.startConnection = function(peer, cb){
 	var self = this;
 	this.p2pConnection = new RTCPeerConnection(this.configuration);
 	cb();
 }
 
+//make an sdp offer
 PeerConnection.prototype.makeOffer = function(cb)	{
 	var self = this;
-	this.p2pConnection.createOffer(function (offer) {
-		self.p2pConnection.setLocalDescription(offer);
-		cb(offer);
+	this.p2pConnection.createOffer(function (sdpOffer) {
+		self.p2pConnection.setLocalDescription(sdpOffer);
+		cb(sdpOffer);
 	}, function(error){
 		console.log(error);
 	});
 }
 
-PeerConnection.prototype.receiveOffer = function(data, cb){
+//receive an sdp offer and create an sdp answer
+PeerConnection.prototype.receiveOffer = function(sdpOffer, cb){
 	var self = this;
-	var SDPOffer = new RTCSessionDescription(data.offer);
+	var SDPOffer = new RTCSessionDescription(sdpOffer.offer);
 	this.p2pConnection.setRemoteDescription(SDPOffer, function(){
 		self.p2pConnection.createAnswer(function (answer) {
 			self.p2pConnection.setLocalDescription(answer);
@@ -89,20 +84,15 @@ PeerConnection.prototype.receiveOffer = function(data, cb){
 	}, function(){});
 }
 
-PeerConnection.prototype.receiveAnswer = function(data){
-	var SDPAnswer = new RTCSessionDescription(data.answer);
-	if (SDPAnswer == null){
-		alert("data is empty");
-	}else {
-		console.log(SDPAnswer);
-	}
+//receive an spd answer
+PeerConnection.prototype.receiveAnswer = function(sdpAnswer){
+	var SDPAnswer = new RTCSessionDescription(sdpAnswer.answer);
 	this.p2pConnection.setRemoteDescription(SDPAnswer,function(){}, function(){});
-	console.log(this.p2pConnection.localDescription);
-	console.log(this.p2pConnection.remoteDescription);
 }
 
-PeerConnection.prototype.addCandidate = function(data) {
-	this.p2pConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+//add ice candidate when receive one
+PeerConnection.prototype.addCandidate = function(iceCandidate) {
+	this.p2pConnection.addIceCandidate(new RTCIceCandidate(iceCandidate.candidate));
 }
 
 module.exports = PeerConnection;

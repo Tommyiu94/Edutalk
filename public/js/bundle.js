@@ -3,10 +3,6 @@ var PeerConnection = require('./PeerConnection');
 var Indicator = require('./Indicator');
 
 function AllConnection(){
-	var configuration = {
-			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
-			}]
-	};
 	var local;
 	var stream;
 	this.connection = {};
@@ -15,6 +11,7 @@ function AllConnection(){
 	this.localVideo.autoplay = true;
 }
 
+// initialise the setup of own camera
 AllConnection.prototype.init = function(user, socket, cb){
 	var self = this;
 	this.local = user;
@@ -23,7 +20,6 @@ AllConnection.prototype.init = function(user, socket, cb){
 		navigator.getUserMedia({ video: true, audio: true }, function (stream) {
 			self.localVideo.src = window.URL.createObjectURL(stream);
 			self.stream = stream;
-			console.log(stream);
 			cb();
 		}, function (error) {
 			console.log(error);
@@ -33,16 +29,15 @@ AllConnection.prototype.init = function(user, socket, cb){
 	}
 }
 
+//initialise a connection with peers
 AllConnection.prototype.initConnection = function(peer){
 	var self = this;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.stream);
-	console.log("local is " + self.local + " and peer is " + peer);
 	self.connection[peer].createVideo(peer, function(){
 		self.connection[peer].startConnection(peer, function(){
 			self.connection[peer].setupPeerConnection(peer, function(){
 				self.connection[peer].makeOffer( function(offer){
 					console.log("send offer to " + peer);
-					console.log(offer);
 					self.socket.emit("SDPOffer", {
 						type: "SDPOffer",
 						local: self.local,
@@ -55,51 +50,47 @@ AllConnection.prototype.initConnection = function(peer){
 	})
 }
 
-AllConnection.prototype.buildEnvironment = function(data, cb){
+//setup environment to be connected by others
+AllConnection.prototype.buildEnvironment = function(peer, cb){
 	var self = this;
-	console.log(data);
-	self.connection[data] = new PeerConnection(self.local, data, self.socket, self.stream);
-	console.log("local is " + self.local + " and peer is " + data);
-	self.connection[data].createVideo(data, function(){
-		self.connection[data].startConnection(data, function(){
-			self.connection[data].setupPeerConnection(data, function(){
+	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.stream);
+	self.connection[peer].createVideo(peer, function(){
+		self.connection[peer].startConnection(peer, function(){
+			self.connection[peer].setupPeerConnection(peer, function(){
 				cb();
 			});
 		});
 	});
 }
 
-AllConnection.prototype.onOffer = function(data){
+//when receive an spd offer
+AllConnection.prototype.onOffer = function(sdpOffer){
 	var self = this;
-	console.log(data.remote);
-	self.connection[data.remote].receiveOffer(data, function(answer){
+	self.connection[sdpOffer.remote].receiveOffer(sdpOffer, function(sdpAnswer){
 		self.socket.emit("SDPAnswer", {
 			type: "SDPAnswer",
 			local: self.local,
-			remote: data.remote,
-			answer: answer
+			remote: sdpOffer.remote,
+			answer: sdpAnswer
 		});
-		console.log(self.connection[data.remote].p2pConnection.localDescription);
-		console.log(self.connection[data.remote].p2pConnection.remoteDescription);
 	}) 
 }
 
-AllConnection.prototype.onAnswer = function(data){
-	this.connection[data.remote].receiveAnswer(data);
+//when receive an spd answer
+AllConnection.prototype.onAnswer = function(sdpAnswer){
+	this.connection[sdpAnswer.remote].receiveAnswer(sdpAnswer);
 }
 
-AllConnection.prototype.onCandidate = function(data){
-	console.log("ice candidate is ");
-	console.log(data.candidate);
-	console.log("from ");
-	console.log(data.remote);
-	this.connection[data.remote].addCandidate(data);
+//when receive an ice candidate
+AllConnection.prototype.onCandidate = function(iceCandidate){
+	this.connection[iceCandidate.remote].addCandidate(iceCandidate);
 }
 
 module.exports = AllConnection;
 },{"./Indicator":2,"./PeerConnection":3}],2:[function(require,module,exports){
 function Indicator(){}
 
+//indicate whether the browser supports user media
 Indicator.prototype.hasUserMedia = function(){
 	navigator.getUserMedia = navigator.getUserMedia ||
 	navigator.webkitGetUserMedia || navigator.mozGetUserMedia ||
@@ -107,6 +98,7 @@ Indicator.prototype.hasUserMedia = function(){
 	return !!navigator.getUserMedia;
 }
 
+//indicate whether the browser supports RTCPeerConnection
 Indicator.prototype.hasRTCPeerConnection = function() {
 	window.RTCPeerConnection = window.RTCPeerConnection ||
 	window.webkitRTCPeerConnection || window.mozRTCPeerConnection
@@ -134,14 +126,9 @@ function PeerConnection(local, peer, socket, stream){
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
 	};
-	console.log("stream is ");
-	console.log(this.stream);
 }
 
-/*PeerConnection.prototype.setLocalVideo = function(ourVideoId){
-	this.yourVideo = document.getElementById("ourVideoId"):
-}*/
-
+//create a new video element in html for every peer connenction built
 PeerConnection.prototype.createVideo = function(peer, cb){
 	var remotes = document.getElementById("remoteVideoContainer");
 	if (remotes) {
@@ -152,14 +139,12 @@ PeerConnection.prototype.createVideo = function(peer, cb){
 		remoteVideo.autoplay = true;
 		remotes.appendChild(remoteVideo);
 		this.theirVideo = document.getElementById(this.theirVideoId);
-//		this.onVideoAdded(this.theirVideo);
 	}
 	cb();
 }
 
-
+//setup the p2p connection with a peer
 PeerConnection.prototype.setupPeerConnection = function(peer, cb) {
-	console.log("setupICEConnection: peer is " + peer);
 	var self = this;
 	// Setup stream listening
 	this.p2pConnection.addStream(self.stream);
@@ -170,7 +155,6 @@ PeerConnection.prototype.setupPeerConnection = function(peer, cb) {
 	// Setup ice handling
 	this.p2pConnection.onicecandidate = function (event) {
 		if (event.candidate) {
-			console.log( "ICECandidate peer is " + peer);
 			self.socket.emit("candidate", {
 				type: "candidate",
 				local: self.user,
@@ -182,25 +166,28 @@ PeerConnection.prototype.setupPeerConnection = function(peer, cb) {
 	cb();
 }
 
+//initialise p2pconnection at the start of a peer connection 
 PeerConnection.prototype.startConnection = function(peer, cb){
 	var self = this;
 	this.p2pConnection = new RTCPeerConnection(this.configuration);
 	cb();
 }
 
+//make an sdp offer
 PeerConnection.prototype.makeOffer = function(cb)	{
 	var self = this;
-	this.p2pConnection.createOffer(function (offer) {
-		self.p2pConnection.setLocalDescription(offer);
-		cb(offer);
+	this.p2pConnection.createOffer(function (sdpOffer) {
+		self.p2pConnection.setLocalDescription(sdpOffer);
+		cb(sdpOffer);
 	}, function(error){
 		console.log(error);
 	});
 }
 
-PeerConnection.prototype.receiveOffer = function(data, cb){
+//receive an sdp offer and create an sdp answer
+PeerConnection.prototype.receiveOffer = function(sdpOffer, cb){
 	var self = this;
-	var SDPOffer = new RTCSessionDescription(data.offer);
+	var SDPOffer = new RTCSessionDescription(sdpOffer.offer);
 	this.p2pConnection.setRemoteDescription(SDPOffer, function(){
 		self.p2pConnection.createAnswer(function (answer) {
 			self.p2pConnection.setLocalDescription(answer);
@@ -211,20 +198,15 @@ PeerConnection.prototype.receiveOffer = function(data, cb){
 	}, function(){});
 }
 
-PeerConnection.prototype.receiveAnswer = function(data){
-	var SDPAnswer = new RTCSessionDescription(data.answer);
-	if (SDPAnswer == null){
-		alert("data is empty");
-	}else {
-		console.log(SDPAnswer);
-	}
+//receive an spd answer
+PeerConnection.prototype.receiveAnswer = function(sdpAnswer){
+	var SDPAnswer = new RTCSessionDescription(sdpAnswer.answer);
 	this.p2pConnection.setRemoteDescription(SDPAnswer,function(){}, function(){});
-	console.log(this.p2pConnection.localDescription);
-	console.log(this.p2pConnection.remoteDescription);
 }
 
-PeerConnection.prototype.addCandidate = function(data) {
-	this.p2pConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+//add ice candidate when receive one
+PeerConnection.prototype.addCandidate = function(iceCandidate) {
+	this.p2pConnection.addIceCandidate(new RTCIceCandidate(iceCandidate.candidate));
 }
 
 module.exports = PeerConnection;
@@ -241,74 +223,79 @@ function WebRTC(server){
 
 	this.socket = io(server);
 
-	self.socket.on("peer", function(data){
+	//responde to different socket received from server
+	
+	//receive the peer list in the same room
+	self.socket.on("peer", function(peerData){
 		document.getElementById("peer").value = "";
-		console.log(data.allUser);
 		var peerList = "";
-		for (var i in data.allUser ) {
-			peerList += data.allUser[i] + " ";
-			console.log("peerList is " + peerList);
+		for (var i in peerData.allUser ) {
+			peerList += peerData.allUser[i] + " ";
 		}
-		console.log = peerList;
 	})
 
-	self.socket.on("feedback", function(data) {
-		console.log("feedback: " + data);
+	self.socket.on("feedback", function(feedback) {
+		console.log("feedback: " + feedback);
 	})
 
-	self.socket.on("newUser", function(data) {
-		console.log("newUser");
-		console.log(data);
-		self.allConnection.buildEnvironment(data, function(){
+	//new user enter the room
+	self.socket.on("newUser", function(newUserData) {
+		self.allConnection.buildEnvironment(newUserData, function(){
 			self.socket.emit("ICESetupStatus", {
 				type: "ICESetupStatus",
 				local: self.user,
-				remote: data,
+				remote: newUserData,
 				ICESetupStatus: "DONE"
 			});
-			console.log(data);
 			console.log("ICE setup Ready");
 		});
 	})
 
-	self.socket.on("SDPOffer", function(data) {
-		self.allConnection.onOffer(data);
+	//receive a sdp offer
+	self.socket.on("SDPOffer", function(sdpOffer) {
+		self.allConnection.onOffer(sdpOffer);
 	})
 
-	self.socket.on("SDPAnswer", function(data) {
-		console.log("receive answer");
-		self.allConnection.onAnswer(data);
+	//receive a sdp answer
+	self.socket.on("SDPAnswer", function(sdpAnswer) {
+		self.allConnection.onAnswer(sdpAnswer);
 	})
 
-	self.socket.on("candidate", function(data) {
-		self.allConnection.onCandidate(data);
+	//receive an ice candidate
+	self.socket.on("candidate", function(iceCandidate) {
+		self.allConnection.onCandidate(iceCandidate);
 	})
 
-	self.socket.on("ICESetupStatus", function(data){
-		console.log("start to connent to " + data.remote);
-		console.log(data.remote);
-		self.allConnection.initConnection(data.remote);
+	/* receive the status message of ICE setup from the peer
+	 * before sending a sdp offer
+	 * */
+	self.socket.on("ICESetupStatus", function(iceSetupData){
+		self.allConnection.initConnection(iceSetupData.remote);
 	})
 
-	self.socket.on("disconnectedUser", function(data) {
-		console.log("user " + data + " is disconnected");
-		self.allConnection.connection[data] = null;
-		self.onUserDisconnect(data);
+	// when a user in the room disconnnected
+	self.socket.on("disconnectedUser", function(disConnectedUserName) {
+		console.log("user " + disConnectedUserName + " is disconnected");
+		self.allConnection.connection[disConnectedUserName] = null;
+		self.onUserDisconnect(disConnectedUserName);
 	})
 
-	self.socket.on("chatMessage", function(data){
-		self.onChatMessage(data);
+	// when the user receive a chat message
+	self.socket.on("chatMessage", function(chatMessageData){
+		self.onChatMessage(chatMessageData);
 	})
 }
 
+
+//find more details of following api in readme
 WebRTC.prototype.login = function(userName, successCallback, failCallback) {
 	var self = this;
 	this.socket.emit("login", userName);
-	this.socket.on("login", function(data){
-		if (data.status === "success") {
-			self.user = data.userName;
+	this.socket.on("login", function(loginResponse){
+		if (loginResponse.status === "success") {
+			self.user = loginResponse.userName;
 			successCallback();
-		} else if (data.status === "fail") {
+		} else if (loginResponse.status === "fail") {
 			failCallback();
 		}
 	});
@@ -317,10 +304,10 @@ WebRTC.prototype.login = function(userName, successCallback, failCallback) {
 WebRTC.prototype.createRoom = function(roomId, successCallback, failCallback){
 	var self = this;
 	this.socket.emit("createRoom", roomId);
-	this.socket.on("createRoom", function(data){
-		if (data.status === "success") {
+	this.socket.on("createRoom", function(createRoomResponse){
+		if (createRoomResponse.status === "success") {
 			successCallback();
-		} else if (data.status === "fail") {
+		} else if (createRoomResponse.status === "fail") {
 			failCallback();
 		}
 	});
@@ -349,10 +336,10 @@ WebRTC.prototype.startCamera = function(){
 WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	var self = this;
 	this.socket.emit("joinRoom", roomId);
-	this.socket.on("joinRoom", function(data){
-		if (data.status === "success") {
+	this.socket.on("joinRoom", function(joinRoomResponse){
+		if (joinRoomResponse.status === "success") {
 			successCallback();
-		} else if (data.status === "fail") {
+		} else if (joinRoomResponse.status === "fail") {
 			failCallback();
 		}
 	});
@@ -361,39 +348,33 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 WebRTC.prototype.muteVideo = function(){
 	if (this.videoTracks[0]) {
 		this.videoTracks[0].enabled = false;
-		console.log(this.videoTracks[0]);
 	}
 }
 
 WebRTC.prototype.unmuteVideo = function(){
 	if (this.videoTracks[0]) {
 		this.videoTracks[0].enabled = true;
-		console.log(this.videoTracks[0]);
 	}
 }
 
 WebRTC.prototype.muteAudio = function(){
 	if (this.audioTracks[0]) {
 		this.audioTracks[0].enabled = false;
-		console.log(this.audioTracks[0]);
-		console.log(this.audioTracks.length);
 	}
 }
 
 WebRTC.prototype.unmuteAudio = function(){
 	if (this.audioTracks[0]) {
 		this.audioTracks[0].enabled = true;
-		console.log(this.audioTracks[0]);
 	}
 }
 
 WebRTC.prototype.getPeers = function(){
 	var self = this;
-	console.log("user is " + self.user);
-	this.socket.emit("peer", self.user);
+	this.socket.emit("peer");
 }
 
-WebRTC.prototype.onUserDisconnect = function(data){
+WebRTC.prototype.onUserDisconnect = function(userDisconnected){
 }
 
 WebRTC.prototype.setLocalMediaStream = function(cb){
@@ -405,7 +386,6 @@ WebRTC.prototype.setLocalMediaStream = function(cb){
 
 WebRTC.prototype.sendChatMessage = function(chatMessage){
 	var self = this;
-	console.log("message is " + chatMessage);
 	this.socket.emit("chatMessage", {
 		type: "chatMessage",
 		user: self.user,

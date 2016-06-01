@@ -1,1 +1,0 @@
-var WebRTC = require('./WebRTC');

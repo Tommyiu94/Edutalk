@@ -10,74 +10,79 @@ function WebRTC(server){
 
 	this.socket = io(server);
 
-	self.socket.on("peer", function(data){
+	//responde to different socket received from server
+	
+	//receive the peer list in the same room
+	self.socket.on("peer", function(peerData){
 		document.getElementById("peer").value = "";
-		console.log(data.allUser);
 		var peerList = "";
-		for (var i in data.allUser ) {
-			peerList += data.allUser[i] + " ";
-			console.log("peerList is " + peerList);
+		for (var i in peerData.allUser ) {
+			peerList += peerData.allUser[i] + " ";
 		}
-		console.log = peerList;
 	})
 
-	self.socket.on("feedback", function(data) {
-		console.log("feedback: " + data);
+	self.socket.on("feedback", function(feedback) {
+		console.log("feedback: " + feedback);
 	})
 
-	self.socket.on("newUser", function(data) {
-		console.log("newUser");
-		console.log(data);
-		self.allConnection.buildEnvironment(data, function(){
+	//new user enter the room
+	self.socket.on("newUser", function(newUserData) {
+		self.allConnection.buildEnvironment(newUserData, function(){
 			self.socket.emit("ICESetupStatus", {
 				type: "ICESetupStatus",
 				local: self.user,
-				remote: data,
+				remote: newUserData,
 				ICESetupStatus: "DONE"
 			});
-			console.log(data);
 			console.log("ICE setup Ready");
 		});
 	})
 
-	self.socket.on("SDPOffer", function(data) {
-		self.allConnection.onOffer(data);
+	//receive a sdp offer
+	self.socket.on("SDPOffer", function(sdpOffer) {
+		self.allConnection.onOffer(sdpOffer);
 	})
 
-	self.socket.on("SDPAnswer", function(data) {
-		console.log("receive answer");
-		self.allConnection.onAnswer(data);
+	//receive a sdp answer
+	self.socket.on("SDPAnswer", function(sdpAnswer) {
+		self.allConnection.onAnswer(sdpAnswer);
 	})
 
-	self.socket.on("candidate", function(data) {
-		self.allConnection.onCandidate(data);
+	//receive an ice candidate
+	self.socket.on("candidate", function(iceCandidate) {
+		self.allConnection.onCandidate(iceCandidate);
 	})
 
-	self.socket.on("ICESetupStatus", function(data){
-		console.log("start to connent to " + data.remote);
-		console.log(data.remote);
-		self.allConnection.initConnection(data.remote);
+	/* receive the status message of ICE setup from the peer
+	 * before sending a sdp offer
+	 * */
+	self.socket.on("ICESetupStatus", function(iceSetupData){
+		self.allConnection.initConnection(iceSetupData.remote);
 	})
 
-	self.socket.on("disconnectedUser", function(data) {
-		console.log("user " + data + " is disconnected");
-		self.allConnection.connection[data] = null;
-		self.onUserDisconnect(data);
+	// when a user in the room disconnnected
+	self.socket.on("disconnectedUser", function(disConnectedUserName) {
+		console.log("user " + disConnectedUserName + " is disconnected");
+		self.allConnection.connection[disConnectedUserName] = null;
+		self.onUserDisconnect(disConnectedUserName);
 	})
 
-	self.socket.on("chatMessage", function(data){
-		self.onChatMessage(data);
+	// when the user receive a chat message
+	self.socket.on("chatMessage", function(chatMessageData){
+		self.onChatMessage(chatMessageData);
 	})
 }
 
+
+//find more details of following api in readme
 WebRTC.prototype.login = function(userName, successCallback, failCallback) {
 	var self = this;
 	this.socket.emit("login", userName);
-	this.socket.on("login", function(data){
-		if (data.status === "success") {
-			self.user = data.userName;
+	this.socket.on("login", function(loginResponse){
+		if (loginResponse.status === "success") {
+			self.user = loginResponse.userName;
 			successCallback();
-		} else if (data.status === "fail") {
+		} else if (loginResponse.status === "fail") {
 			failCallback();
 		}
 	});
@@ -86,10 +91,10 @@ WebRTC.prototype.login = function(userName, successCallback, failCallback) {
 WebRTC.prototype.createRoom = function(roomId, successCallback, failCallback){
 	var self = this;
 	this.socket.emit("createRoom", roomId);
-	this.socket.on("createRoom", function(data){
-		if (data.status === "success") {
+	this.socket.on("createRoom", function(createRoomResponse){
+		if (createRoomResponse.status === "success") {
 			successCallback();
-		} else if (data.status === "fail") {
+		} else if (createRoomResponse.status === "fail") {
 			failCallback();
 		}
 	});
@@ -118,10 +123,10 @@ WebRTC.prototype.startCamera = function(){
 WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	var self = this;
 	this.socket.emit("joinRoom", roomId);
-	this.socket.on("joinRoom", function(data){
-		if (data.status === "success") {
+	this.socket.on("joinRoom", function(joinRoomResponse){
+		if (joinRoomResponse.status === "success") {
 			successCallback();
-		} else if (data.status === "fail") {
+		} else if (joinRoomResponse.status === "fail") {
 			failCallback();
 		}
 	});
@@ -130,39 +135,33 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 WebRTC.prototype.muteVideo = function(){
 	if (this.videoTracks[0]) {
 		this.videoTracks[0].enabled = false;
-		console.log(this.videoTracks[0]);
 	}
 }
 
 WebRTC.prototype.unmuteVideo = function(){
 	if (this.videoTracks[0]) {
 		this.videoTracks[0].enabled = true;
-		console.log(this.videoTracks[0]);
 	}
 }
 
 WebRTC.prototype.muteAudio = function(){
 	if (this.audioTracks[0]) {
 		this.audioTracks[0].enabled = false;
-		console.log(this.audioTracks[0]);
-		console.log(this.audioTracks.length);
 	}
 }
 
 WebRTC.prototype.unmuteAudio = function(){
 	if (this.audioTracks[0]) {
 		this.audioTracks[0].enabled = true;
-		console.log(this.audioTracks[0]);
 	}
 }
 
 WebRTC.prototype.getPeers = function(){
 	var self = this;
-	console.log("user is " + self.user);
-	this.socket.emit("peer", self.user);
+	this.socket.emit("peer");
 }
 
-WebRTC.prototype.onUserDisconnect = function(data){
+WebRTC.prototype.onUserDisconnect = function(userDisconnected){
 }
 
 WebRTC.prototype.setLocalMediaStream = function(cb){
@@ -174,7 +173,6 @@ WebRTC.prototype.setLocalMediaStream = function(cb){
 
 WebRTC.prototype.sendChatMessage = function(chatMessage){
 	var self = this;
-	console.log("message is " + chatMessage);
 	this.socket.emit("chatMessage", {
 		type: "chatMessage",
 		user: self.user,

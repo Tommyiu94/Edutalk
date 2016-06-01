@@ -1,61 +1,59 @@
 var app = require("http").createServer();
 var io = require("socket.io")(app);
+//user stores all the sockets
 var user = {};
+//room stores all the room id
 var room = {};
 
 app.listen(8888);
 
 io.on("connection", function(socket){
 
-	socket.on("login", function(data){
+	socket.on("login", function(userName){
 
-		console.log("User " + data + " logins");
+		console.log("User " + userName + " logins");
 
 		try {
-			if (user[data]){
+			if (user[userName]){
 
 				socket.emit("login", {
 					type: "login",
-					userName: "data",
+					userName: userName,
 					status: "fail"
 				});
 
-				console.log(data);
 				console.log("Login unsuccessfully");
 			} else{
-				user[data] = socket;
-				user[data].userName = data;
+				user[userName] = socket;
+				user[userName].userName = userName;
 				socket.emit("login", {
 					type: "login",
-					userName: data,
+					userName: userName,
 					status: "success"
 				});
-				console.log("username in server is: ");
-				console.log(data);
-				console.log("Login successfully");
 			}}catch (e){
 				console.log(e);
 			}
 	})
 
-	socket.on("createRoom", function(data){
+	socket.on("createRoom", function(roomId){
 		try {
-			if (room[data]){
+			if (room[roomId]){
 				socket.emit("createRoom", {
 					type: "createRoom",
 					userName: socket.userName,
-					room: data,
+					room: roomId,
 					status: "fail"
 				});
 			} else{
-				room[data] = data;
-				user[socket.userName].room =data; 
-				user[socket.userName].join(room[data]); 
+				room[roomId] = roomId;
+				user[socket.userName].room =roomId; 
+				user[socket.userName].join(room[roomId]); 
 
 				socket.emit("createRoom", {
 					type: "createRoom",
 					userName: socket.userName,
-					room: data,
+					room: roomId,
 					status: "success"
 				});
 
@@ -64,23 +62,23 @@ io.on("connection", function(socket){
 			}
 	})
 
-	socket.on("joinRoom", function(data){
+	socket.on("joinRoom", function(roomId){
 		try {
-			if (room[data]){
-				user[socket.userName].room = data;
-				user[socket.userName].join(room[data]);
+			if (room[roomId]){
+				user[socket.userName].room = roomId;
+				user[socket.userName].join(room[roomId]);
 
 				socket.emit("joinRoom", {
 					type: "joinRoom",
 					userName: socket.userName,
 					status: "success"
 				});
-				io.sockets.in(room[data]).emit("feedback", "User " + socket.userName + " is in room + " + data + " now" );	
+				io.sockets.in(room[roomId]).emit("feedback", "User " + socket.userName + " is in room " + roomId + " now" );	
 			} else{
 				socket.emit("joinRoom", {
 					type: "joinRoom",
 					userName: socket.userName,
-					room: data,
+					room: roomId,
 					status: "fail"
 				});
 
@@ -89,20 +87,17 @@ io.on("connection", function(socket){
 			}
 	})
 
-	socket.on("setupCamera", function(data){
-		if (data.cameraSetupStatus === "success"){
+	socket.on("setupCamera", function(cameraSetupStatusData){
+		if (cameraSetupStatusData.cameraSetupStatus === "success"){
 			socket.broadcast.to(room[socket.room]).emit("newUser", socket.userName);
 		}
-		else if (data.cameraSetupStatus === "fail"){
+		else if (cameraSetupStatusData.cameraSetupStatus === "fail"){
 			console.log(socket.userName + " failed to set up camera");
 		}
 	})
 
-	socket.on("peer", function(data){
+	socket.on("peer", function(){
 		try {
-			console.log(data);
-			console.log(user[data]);
-			socket = user[data];
 			var clients = io.sockets.adapter.rooms[socket.room].sockets;   
 			var userList = {};
 			for (var clientId in clients ) {
@@ -119,19 +114,18 @@ io.on("connection", function(socket){
 		}
 	})
 
-	socket.on("SDPOffer", function(data){
+	socket.on("SDPOffer", function(sdpOffer){
 
-		console.log(data.local + " is Sending offer to " + data.remote);
+		console.log(sdpOffer.local + " is Sending offer to " + sdpOffer.remote);
 
 		try {
-			if (user[data.remote]){
-				user[data.remote].emit("SDPOffer", {
+			if (user[sdpOffer.remote]){
+				user[sdpOffer.remote].emit("SDPOffer", {
 					type: "SDPOffer",
-					local: data.remote,
-					remote: data.local,
-					offer: data.offer
+					local: sdpOffer.remote,
+					remote: sdpOffer.local,
+					offer: sdpOffer.offer
 				});
-				console.log("remote is " + data.remote + "local is "+ data.local);
 			}else{
 				socket.emit("feedback", "Sending Offer: User does not exist or currently offline");
 			}} catch(e){
@@ -139,16 +133,16 @@ io.on("connection", function(socket){
 			}
 	})
 
-	socket.on("SDPAnswer", function(data){
-		console.log(  data.remote + " is Receiving Answer from " + data.local);
+	socket.on("SDPAnswer", function(sdpAnswer){
+		console.log(  sdpAnswer.remote + " is Receiving Answer from " + sdpAnswer.local);
 
 		try {
-			if (user[data.remote]){
-				user[data.remote].emit("SDPAnswer",{
+			if (user[sdpAnswer.remote]){
+				user[sdpAnswer.remote].emit("SDPAnswer",{
 					type: "SDPAnswer",
-					local: data.remote,
-					remote: data.local,
-					answer: data.answer
+					local: sdpAnswer.remote,
+					remote: sdpAnswer.local,
+					answer: sdpAnswer.answer
 				});	
 
 			}else{
@@ -158,33 +152,30 @@ io.on("connection", function(socket){
 			}
 	})
 
-	socket.on("candidate", function(data){
-		user[data.remote].emit("candidate", {
+	socket.on("candidate", function(iceCandidate){
+		user[iceCandidate.remote].emit("candidate", {
 			type: "candidate",
-			local: data.remote,
-			remote: data.local,
-			candidate: data.candidate
+			local: iceCandidate.remote,
+			remote: iceCandidate.local,
+			candidate: iceCandidate.candidate
 		});
 	})
 
 	socket.on("disconnect", function(){
-		console.log("user " + socket.userName + " is disconnected");
-		console.log("room is " + socket.room);
 		socket.broadcast.to(socket.room).emit("disconnectedUser", socket.userName);
 		user[socket.userName] = null;
 	})
 
-	socket.on("ICESetupStatus", function(data){
+	socket.on("ICESetupStatus", function(ICESetupStatus){
 		try {
-			if (user[data.remote]){
-				user[data.remote].emit("ICESetupStatus", {
+			if (user[ICESetupStatus.remote]){
+				user[ICESetupStatus.remote].emit("ICESetupStatus", {
 					type: "ICESetupStatus",
-					local: data.remote,
-					remote: data.local,
-					offer: data.offer
+					local: ICESetupStatus.remote,
+					remote: ICESetupStatus.local,
+					offer: ICESetupStatus.offer
 				});
 
-				console.log("remote is " + data.remote + "local is "+ data.local);
 			}else{
 				socket.emit("feedback", "Sending Status: User does not exist or currently offline");
 			}} catch(e){
@@ -192,12 +183,11 @@ io.on("connection", function(socket){
 			}
 	})
 
-	socket.on("chatMessage", function(data){
-		console.log(socket.userName + " send message");
+	socket.on("chatMessage", function(chatMessageData){
 		io.sockets.in(socket.room).emit("chatMessage", {
 			type: "chatMessage",
-			sender: data.user,
-			content: data.content
+			sender: chatMessageData.user,
+			content: chatMessageData.content
 		});
 	})
 

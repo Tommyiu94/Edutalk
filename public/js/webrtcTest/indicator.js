@@ -1,5 +1,6 @@
 function Indicator(){}
 
+//indicate whether the browser supports user media
 Indicator.prototype.hasUserMedia = function(){
 	navigator.getUserMedia = navigator.getUserMedia ||
 	navigator.webkitGetUserMedia || navigator.mozGetUserMedia ||
@@ -7,6 +8,7 @@ Indicator.prototype.hasUserMedia = function(){
 	return !!navigator.getUserMedia;
 }
 
+//indicate whether the browser supports RTCPeerConnection
 Indicator.prototype.hasRTCPeerConnection = function() {
 	window.RTCPeerConnection = window.RTCPeerConnection ||
 	window.webkitRTCPeerConnection || window.mozRTCPeerConnection
