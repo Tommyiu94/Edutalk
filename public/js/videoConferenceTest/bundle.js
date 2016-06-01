@@ -225,15 +225,6 @@ function WebRTC(server){
 
 	//responde to different socket received from server
 	
-	//receive the peer list in the same room
-	self.socket.on("peer", function(peerData){
-		document.getElementById("peer").value = "";
-		var peerList = "";
-		for (var i in peerData.allUser ) {
-			peerList += peerData.allUser[i] + " ";
-		}
-	})
-
 	self.socket.on("feedback", function(feedback) {
 		console.log("feedback: " + feedback);
 	})
@@ -369,9 +360,12 @@ WebRTC.prototype.unmuteAudio = function(){
 	}
 }
 
-WebRTC.prototype.getPeers = function(){
+WebRTC.prototype.getPeers = function(cb){
 	var self = this;
 	this.socket.emit("peer");
+	self.socket.on("peer", function(peerList){
+		cb(peerList);
+	})
 }
 
 WebRTC.prototype.onUserDisconnect = function(userDisconnected){

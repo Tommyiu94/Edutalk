@@ -68,5 +68,15 @@ webrtc.unmuteVideo();
 
 ### To get the information of the peers in the room
 ```javascript
-webrtc.getPeers();
+webrtc.getPeers(callback(peerListData));
+
+sample use:
+webrtc.getPeers(function(peerListData){		
+	document.getElementById("peer").value = "";
+	var peerList = "";
+	for (var i in peerListData.allUser ) {
+		peerList += peerListData.allUser[i] + " ";
+	}
+	document.getElementById("peer").value = peerList;
+});
 ```

@@ -83,5 +83,12 @@ function jRoom(e){
 }
 
 function getPeers(){	
-	webrtc.getPeers();
+	webrtc.getPeers(function(peerListData){		
+		document.getElementById("peer").value = "";
+		var peerList = "";
+		for (var i in peerListData.allUser ) {
+			peerList += peerListData.allUser[i] + " ";
+		}
+		document.getElementById("peer").value = peerList;
+	});
 }
