@@ -193,6 +193,7 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   var username = DataService.getUsername();
   var roomID = $routeParams.roomID;
   var webrtc = WebRTCService.getWebRTC();
+
 	webrtc.startCamera();
 
   // Responsive containers
@@ -228,6 +229,31 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
       }
     }
   };
+
+	var video_on = true;
+	var audio_on = true;
+	var videoMute = function(){
+		if (video_on === true){
+			webrtc.muteVideo();
+			video_on = false;
+		} else {
+			webrtc.unmuteVideo();
+			video_on = true;
+		}
+	};
+
+	var audioMute = function(){
+		if (audio_on === true){
+			webrtc.muteAudio();
+			audio_on = false;
+		} else {
+			webrtc.unmuteAudio();
+			audio_on = true;
+		}
+	};
+
+	$scope.videoMute = videoMute;
+	$scope.audioMute = audioMute;
   $scope.videoFullScreen = videoFullScreen;
 
   // Responsive Videos on Peer Video Added
