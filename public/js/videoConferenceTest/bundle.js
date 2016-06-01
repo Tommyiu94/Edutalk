@@ -1,6 +1,6 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.WebRTC = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var PeerConnection = require('./PeerConnection');
-var Indicator = require('./Indicator');
+var PeerConnection = require('./peerconnection.js');
+var Indicator = require('./indicator.js');
 
 function AllConnection(){
 	var local;
@@ -87,7 +87,54 @@ AllConnection.prototype.onCandidate = function(iceCandidate){
 }
 
 module.exports = AllConnection;
-},{"./Indicator":2,"./PeerConnection":3}],2:[function(require,module,exports){
+
+},{"./indicator.js":3,"./peerconnection.js":5}],2:[function(require,module,exports){
+/* Adapted from Otalk */
+var support = require('webrtcsupport');
+
+function GainController(stream) {
+	this.support = support.supportWebAudio && support.supportMediaStream;
+
+	// set our starting value
+	this.gain = 1;
+
+	if (this.support) {
+		var context = this.context = new support.AudioContext();
+		this.microphone = context.createMediaStreamSource(stream);
+		this.gainFilter = context.createGain();
+		this.destination = context.createMediaStreamDestination();
+		this.outputStream = this.destination.stream;
+		this.microphone.connect(this.gainFilter);
+		this.gainFilter.connect(this.destination);
+		stream.addTrack(this.outputStream.getAudioTracks()[0]);
+		stream.removeTrack(stream.getAudioTracks()[0]);
+	}
+	this.stream = stream;
+}
+
+// setting
+GainController.prototype.setGain = function (val) {
+	// check for support
+	if (!this.support) return;
+	this.gainFilter.gain.value = val;
+	this.gain = val;
+};
+
+GainController.prototype.getGain = function () {
+	return this.gain;
+};
+
+GainController.prototype.off = function () {
+	return this.setGain(0);
+};
+
+GainController.prototype.on = function () {
+	this.setGain(1);
+};
+
+module.exports = GainController;
+
+},{"webrtcsupport":4}],3:[function(require,module,exports){
 function Indicator(){}
 
 //indicate whether the browser supports user media
@@ -111,7 +158,54 @@ Indicator.prototype.hasRTCPeerConnection = function() {
 }
 
 module.exports = Indicator;
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
+// created by @HenrikJoreteg
+var prefix;
+var version;
+
+if (window.mozRTCPeerConnection || navigator.mozGetUserMedia) {
+    prefix = 'moz';
+    version = parseInt(navigator.userAgent.match(/Firefox\/([0-9]+)\./)[1], 10);
+} else if (window.webkitRTCPeerConnection || navigator.webkitGetUserMedia) {
+    prefix = 'webkit';
+    version = navigator.userAgent.match(/Chrom(e|ium)/) && parseInt(navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./)[2], 10);
+}
+
+var PC = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+var IceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
+var SessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
+var MediaStream = window.webkitMediaStream || window.MediaStream;
+var screenSharing = window.location.protocol === 'https:' &&
+    ((prefix === 'webkit' && version >= 26) ||
+     (prefix === 'moz' && version >= 33))
+var AudioContext = window.AudioContext || window.webkitAudioContext;
+var videoEl = document.createElement('video');
+var supportVp8 = videoEl && videoEl.canPlayType && videoEl.canPlayType('video/webm; codecs="vp8", vorbis') === "probably";
+var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.msGetUserMedia || navigator.mozGetUserMedia;
+
+// export support flags and constructors.prototype && PC
+module.exports = {
+    prefix: prefix,
+    browserVersion: version,
+    support: !!PC && !!getUserMedia,
+    // new support style
+    supportRTCPeerConnection: !!PC,
+    supportVp8: supportVp8,
+    supportGetUserMedia: !!getUserMedia,
+    supportDataChannel: !!(PC && PC.prototype && PC.prototype.createDataChannel),
+    supportWebAudio: !!(AudioContext && AudioContext.prototype.createMediaStreamSource),
+    supportMediaStream: !!(MediaStream && MediaStream.prototype.removeTrack),
+    supportScreenSharing: !!screenSharing,
+    // constructors
+    AudioContext: AudioContext,
+    PeerConnection: PC,
+    SessionDescription: SessionDescription,
+    IceCandidate: IceCandidate,
+    MediaStream: MediaStream,
+    getUserMedia: getUserMedia
+};
+
+},{}],5:[function(require,module,exports){
 
 function PeerConnection(local, peer, socket, stream){
 	var theirVideo;
@@ -210,8 +304,9 @@ PeerConnection.prototype.addCandidate = function(iceCandidate) {
 }
 
 module.exports = PeerConnection;
-},{}],4:[function(require,module,exports){
-var AllConnection = require('./AllConnection');
+},{}],6:[function(require,module,exports){
+var AllConnection = require('./allconnection.js');
+var GainController = require('./gaincontroller.js');
 
 function WebRTC(server){
 	var self = this;
@@ -314,7 +409,8 @@ WebRTC.prototype.startCamera = function(){
 					type: "setupCamera",
 					cameraSetupStatus: "success"
 				});
-			})
+				self.gainController = new GainController(self.localMediaStream);
+			});
 		});
 	}catch(e){
 		self.socket.emit("setupCamera", {
@@ -351,12 +447,14 @@ WebRTC.prototype.unmuteVideo = function(){
 WebRTC.prototype.muteAudio = function(){
 	if (this.audioTracks[0]) {
 		this.audioTracks[0].enabled = false;
+		this.gainController.setGain(0);
 	}
 }
 
 WebRTC.prototype.unmuteAudio = function(){
 	if (this.audioTracks[0]) {
 		this.audioTracks[0].enabled = true;
+		this.gainController.setGain(1);
 	}
 }
 
@@ -391,5 +489,6 @@ WebRTC.prototype.onChatMessage = function(chatMessageData){
 }
 
 module.exports = WebRTC;
-},{"./AllConnection":1}]},{},[4])(4)
+
+},{"./allconnection.js":1,"./gaincontroller.js":2}]},{},[6])(6)
 });

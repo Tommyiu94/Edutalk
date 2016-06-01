@@ -1,4 +1,5 @@
-var AllConnection = require('./AllConnection');
+var AllConnection = require('./allconnection.js');
+var GainController = require('./gaincontroller.js');
 
 function WebRTC(server){
 	var self = this;
@@ -101,7 +102,8 @@ WebRTC.prototype.startCamera = function(){
 					type: "setupCamera",
 					cameraSetupStatus: "success"
 				});
-			})
+				self.gainController = new GainController(self.localMediaStream);
+			});
 		});
 	}catch(e){
 		self.socket.emit("setupCamera", {
@@ -138,12 +140,14 @@ WebRTC.prototype.unmuteVideo = function(){
 WebRTC.prototype.muteAudio = function(){
 	if (this.audioTracks[0]) {
 		this.audioTracks[0].enabled = false;
+		this.gainController.setGain(0);
 	}
 }
 
 WebRTC.prototype.unmuteAudio = function(){
 	if (this.audioTracks[0]) {
 		this.audioTracks[0].enabled = true;
+		this.gainController.setGain(1);
 	}
 }
 

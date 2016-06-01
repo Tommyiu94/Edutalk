@@ -1,5 +1,5 @@
-var PeerConnection = require('./PeerConnection');
-var Indicator = require('./Indicator');
+var PeerConnection = require('./peerconnection.js');
+var Indicator = require('./indicator.js');
 
 function AllConnection(){
 	var local;
