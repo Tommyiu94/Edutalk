@@ -277,6 +277,8 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
     if (scrollHeight > windowHeight) {
       document.styleSheets[3].cssRules[6].style.width = "49%";
     }
+    // Indicate user has joined in chat window
+
   });
 
   // On user disconnect, remove peer video
@@ -296,6 +298,10 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   };
 
   // ChatBox functions
+  // Welcome message in chatbox
+  var welcomeMessage = "You are now in room " + roomID + ".";
+  var messages = [welcomeMessage];
+
   // Capture message input
   var sendMessage = function() {
     var message = $("#chatInput").val();
@@ -307,9 +313,21 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
 
   // On Message Sent
   webrtc.onChatMessage = function(chatMessageData) {
-    console.log(chatMessageData);
+		console.log(chatMessageData);
+    var messageFormat = chatMessageData.sender + ":" + " " + chatMessageData.content;
+    messages.push(messageFormat);
+    $scope.$apply(); // to let Angular know that scope has changed (for ng-repeat)
 
+    // Clear message input box on send
+    $('#chatInput').val('');
+
+    // Keep scroll bar on the bottom
+    var tableBody = document.getElementById('tableBody');
+    if(tableBody.scrollHeight > tableBody.clientHeight) {
+      tableBody.scrollTop = tableBody.scrollHeight - tableBody.clientHeight;
+    }
   };
+  $scope.messages = messages;
 
   // Toggle on/off Chat Window
   var chatWindow = true; // is hidden
@@ -326,11 +344,9 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
 
   $scope.showChat = showChat;
 
-  var messages = [
-   "Ben has joined the room",
-    "Jonathan has joined the room"
-  ];
-  $scope.messages = messages;
+  // Responsive chatbox
+  var x = window.innerHeight;
+  document.getElementById("tableBody").style.maxHeight = x + "px";
 
   // Room Controller END
 });

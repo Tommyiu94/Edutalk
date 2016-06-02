@@ -364,6 +364,11 @@ function WebRTC(server){
 		console.log("user " + disConnectedUserName + " is disconnected");
 		self.allConnection.connection[disConnectedUserName] = null;
 		self.onUserDisconnect(disConnectedUserName);
+		this.socket.emit("chatMessage", {
+			type: "leave",
+			user: self.user,
+			content: ''
+		});
 	})
 
 	// when the user receive a chat message
@@ -392,6 +397,11 @@ WebRTC.prototype.createRoom = function(roomId, successCallback, failCallback){
 	this.socket.emit("createRoom", roomId);
 	this.socket.on("createRoom", function(createRoomResponse){
 		if (createRoomResponse.status === "success") {
+			this.socket.emit("chatMessage", {
+				type: "create",
+				user: self.user,
+				content: ''
+			});
 			successCallback();
 		} else if (createRoomResponse.status === "fail") {
 			failCallback();
@@ -425,6 +435,11 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	this.socket.emit("joinRoom", roomId);
 	this.socket.on("joinRoom", function(joinRoomResponse){
 		if (joinRoomResponse.status === "success") {
+			this.socket.emit("chatMessage", {
+				type: "login",
+				user: self.user,
+				content: ''
+			});
 			successCallback();
 		} else if (joinRoomResponse.status === "fail") {
 			failCallback();
@@ -479,7 +494,7 @@ WebRTC.prototype.setLocalMediaStream = function(cb){
 WebRTC.prototype.sendChatMessage = function(chatMessage){
 	var self = this;
 	this.socket.emit("chatMessage", {
-		type: "chatMessage",
+		type: "message",
 		user: self.user,
 		content: chatMessage
 	})

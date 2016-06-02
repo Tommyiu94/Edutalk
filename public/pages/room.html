@@ -21,8 +21,8 @@
 <!-- Chatroom -->
 <div class="chat">
   <table class="white striped bordered" id="chatWindow">
-    <tbody>
-    <tr ng-repeat="message in messages">
+    <tbody id="tableBody" style="max-height:0">
+    <tr ng-repeat="message in messages track by $index">
       <td>{{message}}</td>
     </tr>
     </tbody>
