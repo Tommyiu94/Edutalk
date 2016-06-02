@@ -38,23 +38,18 @@ video {
 		Join Room: <br /> <input type="text" id="joinroom"
 			onkeypress="jRoom(event)" /> <br /> Feedback: <br /> <input
 			type="text" id="feedback" /> <br /> All peers: <br /> <input
-			type="text" id="peer" /><br /> Chat: <br /> <input type="text"
-			id="chat" onkeypress="sendChatMessage(event)" /><br />Message Box: <br />
-		<textarea id="messageBox"></textarea>
+			type="text" id="peer" /><br /> Set Host: <br /> <input type="text"
+			id="host" onkeypress="setHost(event)" />
 	</form>
-	<button onclick="muteVideo()">mute video</button>
-	<button onclick="muteAudio()">mute audio</button>
-	<button onclick="unmuteVideo()">unmute video</button>
-	<button onclick="unmuteAudio()">unmute audio</button>
+
 	<button onclick="getPeers()">get peers</button>
-	<button onclick="sendChatMessage()">chat!</button>
-	<title>p2p video conference</title>
+	<title>p2p video broadcast</title>
 
 	<div id="container">
 		<video id="localVideo" width="50" height="50" autoplay></video>
+		<video id="remoteVideo" width="50" height="50" autoplay></video>
 	</div>
 
-	<div id="remoteVideoContainer"></div>
 	<script
 		src="node_modules/socket.io/node_modules/socket.io-client/socket.io.js"></script>
 	<script src="adapter.js"></script>

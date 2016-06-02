@@ -1,35 +1,15 @@
 webrtc = new WebRTC("localhost:8080");
 
-function muteVideo(){
-	webrtc.muteVideo();
-}
-function muteAudio(){
-	webrtc.muteAudio();
-}
-function unmuteVideo(){
-	webrtc.unmuteVideo();
-}
-function unmuteAudio(){
-	webrtc.unmuteAudio();
-}
-
-function sendChatMessage(e){
-	if (e.keyCode == 13) {
-		var message = document.getElementById("chat").value;
-		webrtc.sendChatMessage(message);
-		document.getElementById("chat").value = "";
-	}
-}
-
-WebRTC.prototype.onChatMessage = function(chatMessageData){
-	document.getElementById("messageBox").value += chatMessageData.sender + ": " + chatMessageData.content;
-}
-
 webrtc.onUserDisconnect = function(userDisconnected){
 	console.log("user " + userDisconnected + " is disconnected");
-	var videoId = "peer_" + userDisconnected;
-	var video = document.getElementById(videoId);
-	video.parentNode.removeChild(video);
+}
+
+function setHost(e){
+	if (e.keyCode == 13){
+		var host = document.getElementById("host").value;
+		webrtc.setHost(host);
+		document.getElementById("host").value = "";
+	}
 }
 
 function sendName(e){
@@ -55,7 +35,6 @@ function cRoom(e){
 			document.getElementById("feedback").value = "Input a valid command";
 		else {
 			webrtc.createRoom(command, function(){
-				webrtc.startCamera();
 				document.getElementById("feedback").value = "You successfully created Room ";
 			}, function(){
 				document.getElementById("feedback").value = "Current room already exists" ;
@@ -72,7 +51,6 @@ function jRoom(e){
 			document.getElementById("feedback").value = "Input a valid command";
 		else {
 			webrtc.joinRoom(command, function(){
-				webrtc.startCamera();
 				document.getElementById("feedback").value = "You successfully joined Room ";
 			}, function(){
 				document.getElementById("feedback").value = "Room does not exists" ;
