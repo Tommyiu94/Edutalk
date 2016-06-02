@@ -351,18 +351,7 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
     // Clear message input box on send
     $('#chatInput').val('');
 
-    // Notification animation when chatbox is disabled
-    /* if (chatWindow == true) { //chatWindow is hidden
-      setInterval(function () {
-
-        var red = document.getElementById("chatButton").setAttribute("class", "red waves-effect waves-light btn");
-        var redFlag = true;
-
-        if (redFlag)
-        var blue = document.getElementById("chatButton").setAttribute("class", "blue waves-effect waves-light btn");
-
-      }, 1000);
-    } */
+    // TODO: Notification animation when chatbox is disabled
 
     // Keep scroll bar on the bottom
     var tableBody = document.getElementById('tableBody');
