@@ -153,6 +153,7 @@ io.on("connection", function(socket){
 	})
 
 	socket.on("candidate", function(iceCandidate){
+		console.log(iceCandidate.candidate);
 		user[iceCandidate.remote].emit("candidate", {
 			type: "candidate",
 			local: iceCandidate.remote,
@@ -186,6 +187,7 @@ io.on("connection", function(socket){
 	socket.on("chatMessage", function(chatMessageData){
 		io.sockets.in(socket.room).emit("chatMessage", {
 			type: "chatMessage",
+			action: chatMessageData.action,
 			sender: chatMessageData.user,
 			content: chatMessageData.content
 		});
