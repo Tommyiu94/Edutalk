@@ -302,33 +302,6 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   var welcomeMessage = "You are now in room " + roomID + ".";
   var messages = [welcomeMessage];
 
-  // Capture message input
-  var sendMessage = function() {
-    var message = $("#chatInput").val();
-    if (message.length != 0) {
-      webrtc.sendChatMessage(message);
-    }
-  };
-  $scope.sendMessage = sendMessage;
-
-  // On Message Sent
-  webrtc.onChatMessage = function(chatMessageData) {
-		console.log(chatMessageData);
-    var messageFormat = chatMessageData.sender + ":" + " " + chatMessageData.content;
-    messages.push(messageFormat);
-    $scope.$apply(); // to let Angular know that scope has changed (for ng-repeat)
-
-    // Clear message input box on send
-    $('#chatInput').val('');
-
-    // Keep scroll bar on the bottom
-    var tableBody = document.getElementById('tableBody');
-    if(tableBody.scrollHeight > tableBody.clientHeight) {
-      tableBody.scrollTop = tableBody.scrollHeight - tableBody.clientHeight;
-    }
-  };
-  $scope.messages = messages;
-
   // Toggle on/off Chat Window
   var chatWindow = true; // is hidden
   var showChat = function() {
@@ -343,6 +316,63 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   };
 
   $scope.showChat = showChat;
+
+  // Capture message input
+  var sendMessage = function() {
+    var message = $("#chatInput").val();
+    if (message.length != 0) {
+      webrtc.sendChatMessage(message);
+    }
+  };
+  $scope.sendMessage = sendMessage;
+
+  // On Message Sent
+  webrtc.onChatMessage = function(chatMessageData) {
+
+    if (chatMessageData.action == "chat") {
+      var messageFormat = chatMessageData.sender + ":" + " " + chatMessageData.content;
+      messages.push(messageFormat);
+      $scope.$apply(); // to let Angular know that scope has changed (for ng-repeat)
+    }
+
+    // Let people know user have joined
+    if (chatMessageData.action == "join") {
+      var onUserJoinMessage = chatMessageData.sender + " has joined the room.";
+      messages.push(onUserJoinMessage);
+      $scope.$apply();
+    }
+
+    if (chatMessageData.action == "leave") {
+      var onUserLeaveMessage = chatMessageData.sender + " has left the room.";
+      messages.push(onUserLeaveMessage);
+      $scope.$apply();
+    }
+
+    // Clear message input box on send
+    $('#chatInput').val('');
+
+    // Notification animation when chatbox is disabled
+    /* if (chatWindow == true) { //chatWindow is hidden
+      setInterval(function () {
+
+        var red = document.getElementById("chatButton").setAttribute("class", "red waves-effect waves-light btn");
+        var redFlag = true;
+
+        if (redFlag)
+        var blue = document.getElementById("chatButton").setAttribute("class", "blue waves-effect waves-light btn");
+
+      }, 1000);
+    } */
+
+    // Keep scroll bar on the bottom
+    var tableBody = document.getElementById('tableBody');
+    if(tableBody.scrollHeight > tableBody.clientHeight) {
+      tableBody.scrollTop = tableBody.scrollHeight - tableBody.clientHeight;
+    }
+  };
+  $scope.messages = messages;
+
+
 
   // Responsive chatbox
   var x = window.innerHeight;

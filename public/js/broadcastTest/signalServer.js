@@ -46,9 +46,10 @@ io.on("connection", function(socket){
 					status: "fail"
 				});
 			} else{
-				room[roomId] = roomId;
-				user[socket.userName].room =roomId; 
-				user[socket.userName].join(room[roomId]); 
+				room[roomId] = {};
+				room[roomId].roomId = roomId;
+				user[socket.userName].room = roomId; 
+				//user[socket.userName].join(room[roomId]); 
 
 				socket.emit("createRoom", {
 					type: "createRoom",
@@ -56,6 +57,8 @@ io.on("connection", function(socket){
 					room: roomId,
 					status: "success"
 				});
+				
+				socket.emit("feedback", "Please set the host");
 
 			}}catch (e){
 				console.log(e);
@@ -65,15 +68,26 @@ io.on("connection", function(socket){
 	socket.on("joinRoom", function(roomId){
 		try {
 			if (room[roomId]){
+
+				socket.emit("host", {
+					type: "host",
+					host: room[roomId].host
+				});
 				user[socket.userName].room = roomId;
-				user[socket.userName].join(room[roomId]);
 
 				socket.emit("joinRoom", {
 					type: "joinRoom",
 					userName: socket.userName,
 					status: "success"
 				});
-				io.sockets.in(room[roomId]).emit("feedback", "User " + socket.userName + " is in room " + roomId + " now" );	
+
+				if (socket.userName == room[roomId].host){
+					socket.emit("startCamera");
+				}else {
+					user[socket.userName].join(socket.room);
+					socket.broadcast.to(socket.room).emit("newUser", socket.userName);
+					io.sockets.in(roomId).emit("feedback", "User " + socket.userName + " is in room " + roomId + " now" );	
+				}
 			} else{
 				socket.emit("joinRoom", {
 					type: "joinRoom",
@@ -89,7 +103,9 @@ io.on("connection", function(socket){
 
 	socket.on("setupCamera", function(cameraSetupStatusData){
 		if (cameraSetupStatusData.cameraSetupStatus === "success"){
-			socket.broadcast.to(room[socket.room]).emit("newUser", socket.userName);
+			user[socket.userName].join(socket.room);
+			socket.broadcast.to(socket.room).emit("newUser", socket.userName);
+			socket.broadcast.to(socket.room).emit("feedback", "Host is inside the room");
 		}
 		else if (cameraSetupStatusData.cameraSetupStatus === "fail"){
 			console.log(socket.userName + " failed to set up camera");
@@ -153,6 +169,7 @@ io.on("connection", function(socket){
 	})
 
 	socket.on("candidate", function(iceCandidate){
+		console.log("an ice candidate is transfered");
 		user[iceCandidate.remote].emit("candidate", {
 			type: "candidate",
 			local: iceCandidate.remote,
@@ -191,4 +208,27 @@ io.on("connection", function(socket){
 		});
 	})
 
+	socket.on("host", function(hostData){
+		try {
+			room[socket.room].host = hostData.host;
+			console.log("host of room " + socket.room + " is " + hostData.host);
+
+			socket.emit("host", {
+				type: "host",
+				host: hostData.host
+			});
+			console.log("username is ");
+			console.log(socket.userName);
+			console.log("host is ");
+			console.log(hostData.host);
+			
+			if (socket.userName == hostData.host){
+				socket.emit("startCamera");
+			}else {
+				user[socket.userName].join(socket.room);
+			}
+		} catch(e){
+			console.log(e);
+		}
+	})
 })
