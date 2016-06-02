@@ -186,6 +186,7 @@ io.on("connection", function(socket){
 	socket.on("chatMessage", function(chatMessageData){
 		io.sockets.in(socket.room).emit("chatMessage", {
 			type: "chatMessage",
+			action: chatMessageData.action,
 			sender: chatMessageData.user,
 			content: chatMessageData.content
 		});
