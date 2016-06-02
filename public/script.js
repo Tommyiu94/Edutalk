@@ -313,6 +313,7 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
 
   // On Message Sent
   webrtc.onChatMessage = function(chatMessageData) {
+		console.log(chatMessageData);
     var messageFormat = chatMessageData.sender + ":" + " " + chatMessageData.content;
     messages.push(messageFormat);
     $scope.$apply(); // to let Angular know that scope has changed (for ng-repeat)
