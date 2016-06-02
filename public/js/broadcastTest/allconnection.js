@@ -40,7 +40,7 @@ AllConnection.prototype.initConnection = function(peer){
 	var self = this;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
 	self.connection[peer].startConnection(function(){
-		
+
 		if (self.local === self.host){
 			console.log("initiate connection as a host");
 			self.connection[peer].hostSetupPeerConnection(peer, self.stream, function(){
