@@ -302,6 +302,21 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   var welcomeMessage = "You are now in room " + roomID + ".";
   var messages = [welcomeMessage];
 
+  // Toggle on/off Chat Window
+  var chatWindow = true; // is hidden
+  var showChat = function() {
+    if (chatWindow == true) {
+      $("#chatWindow").show();
+      chatWindow = false;
+    }
+    else {
+      $("#chatWindow").hide();
+      chatWindow = true;
+    }
+  };
+
+  $scope.showChat = showChat;
+
   // Capture message input
   var sendMessage = function() {
     var message = $("#chatInput").val();
@@ -320,6 +335,17 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
     // Clear message input box on send
     $('#chatInput').val('');
 
+    // Notification animation when chatbox is disabled
+    if (chatWindow == true) { //chatWindow is hidden
+
+     /* setInterval(function() {
+        document.getElementById("chatButton").setAttribute("class", "red waves-effect waves-light btn");
+      }, 500);
+      setInterval(function() {
+        document.getElementById("chatButton").setAttribute("class", "blue waves-effect waves-light btn");
+      }, 1000); */
+    }
+
     // Keep scroll bar on the bottom
     var tableBody = document.getElementById('tableBody');
     if(tableBody.scrollHeight > tableBody.clientHeight) {
@@ -328,20 +354,7 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   };
   $scope.messages = messages;
 
-  // Toggle on/off Chat Window
-  var chatWindow = true; // is hidden
-  var showChat = function() {
-    if (chatWindow == true) {
-      $("#chatWindow").show();
-      chatWindow = false;
-    }
-    else {
-      $("#chatWindow").hide();
-      chatWindow = true;
-    }
-  };
 
-  $scope.showChat = showChat;
 
   // Responsive chatbox
   var x = window.innerHeight;
