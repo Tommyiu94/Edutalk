@@ -376,7 +376,7 @@ function WebRTC(server){
 		self.socket.emit("chatMessage", {
 			type: "chatMessage",
 			action: "leave",
-			user: self.user,
+			user: disConnectedUserName,
 			content: ''
 		});
 	})
