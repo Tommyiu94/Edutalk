@@ -320,6 +320,15 @@ function WebRTC(server){
 
 	//responde to different socket received from server
 	
+	//receive the peer list in the same room
+	self.socket.on("peer", function(peerData){
+		document.getElementById("peer").value = "";
+		var peerList = "";
+		for (var i in peerData.allUser ) {
+			peerList += peerData.allUser[i] + " ";
+		}
+	})
+
 	self.socket.on("feedback", function(feedback) {
 		console.log("feedback: " + feedback);
 	})
@@ -364,8 +373,9 @@ function WebRTC(server){
 		console.log("user " + disConnectedUserName + " is disconnected");
 		self.allConnection.connection[disConnectedUserName] = null;
 		self.onUserDisconnect(disConnectedUserName);
-		this.socket.emit("chatMessage", {
-			type: "leave",
+		self.socket.emit("chatMessage", {
+			type: "chatMessage",
+			action: "leave",
 			user: self.user,
 			content: ''
 		});
@@ -397,8 +407,9 @@ WebRTC.prototype.createRoom = function(roomId, successCallback, failCallback){
 	this.socket.emit("createRoom", roomId);
 	this.socket.on("createRoom", function(createRoomResponse){
 		if (createRoomResponse.status === "success") {
-			this.socket.emit("chatMessage", {
-				type: "create",
+			self.socket.emit("chatMessage", {
+				type: "chatMessage",
+				action: "create",
 				user: self.user,
 				content: ''
 			});
@@ -435,8 +446,9 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	this.socket.emit("joinRoom", roomId);
 	this.socket.on("joinRoom", function(joinRoomResponse){
 		if (joinRoomResponse.status === "success") {
-			this.socket.emit("chatMessage", {
-				type: "login",
+			self.socket.emit("chatMessage", {
+				type: "chatMessage",
+				action: "join",
 				user: self.user,
 				content: ''
 			});
@@ -473,12 +485,9 @@ WebRTC.prototype.unmuteAudio = function(){
 	}
 }
 
-WebRTC.prototype.getPeers = function(cb){
+WebRTC.prototype.getPeers = function(){
 	var self = this;
 	this.socket.emit("peer");
-	self.socket.on("peer", function(peerList){
-		cb(peerList);
-	})
 }
 
 WebRTC.prototype.onUserDisconnect = function(userDisconnected){
@@ -493,8 +502,9 @@ WebRTC.prototype.setLocalMediaStream = function(cb){
 
 WebRTC.prototype.sendChatMessage = function(chatMessage){
 	var self = this;
-	this.socket.emit("chatMessage", {
-		type: "message",
+	self.socket.emit("chatMessage", {
+		type: "chatMessage",
+		action: "chat",
 		user: self.user,
 		content: chatMessage
 	})

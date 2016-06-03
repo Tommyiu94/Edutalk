@@ -57,7 +57,7 @@ io.on("connection", function(socket){
 					room: roomId,
 					status: "success"
 				});
-				
+
 				socket.emit("feedback", "Please set the host");
 
 			}}catch (e){
@@ -221,7 +221,7 @@ io.on("connection", function(socket){
 			console.log(socket.userName);
 			console.log("host is ");
 			console.log(hostData.host);
-			
+
 			if (socket.userName == hostData.host){
 				socket.emit("startCamera");
 			}else {
