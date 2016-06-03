@@ -293,7 +293,7 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
     var scrollHeight = document.getElementById("remoteVideoContainer").scrollHeight;
     var windowHeight = window.innerHeight;
     if (scrollHeight == windowHeight) {
-      document.styleSheets[2].cssRules[6].style.width = "98%";
+      document.styleSheets[3].cssRules[6].style.width = "98%";
     }
   };
 
@@ -366,6 +366,9 @@ edutalkApp.controller('roomController', function($scope, DataService, WebRTCServ
   // Responsive chatbox
   var x = window.innerHeight;
   document.getElementById("tableBody").style.maxHeight = x + "px";
+  var y = $("#chatWindow").width();
+  document.styleSheets[3].cssRules[14].style.width = y + "px";
+
 
   // Room Controller END
 });

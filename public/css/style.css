@@ -103,7 +103,7 @@ tbody {
 }
 
 .ng-binding {
-    width: 40%;
+    width: 0; /* Width will be set in script */
 }
 
 
