@@ -102,13 +102,13 @@ WebRTC.prototype.startCamera = function(cb){
 	var self = this;
 	console.log("start camera");
 	try {
-		self.allConnection.initCamera(function(){
+		//self.allConnection.initCamera(function(){
 			self.socket.emit("setupCamera", {
 				type: "setupCamera",
 				cameraSetupStatus: "success"
 			});
-		});
-		cb();
+	/*	});
+		cb();*/
 	}catch(e){
 		self.socket.emit("setupCamera", {
 			type: "setupCamera",

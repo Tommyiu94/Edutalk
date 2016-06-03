@@ -27,6 +27,8 @@ AllConnection.prototype.initCamera = function(cb){
 		navigator.getUserMedia({ video: true, audio: true }, function (stream) {
 			self.localVideo.src = window.URL.createObjectURL(stream);
 			self.stream = stream;
+			console.log("stream is ");
+			console.log(stream);
 			cb();
 		}, function (error) {
 			console.log(error);
@@ -57,14 +59,16 @@ AllConnection.prototype.initConnection = function(peer){
 			});
 		} else {
 			console.log("initiate connection as a visitor");
-			self.connection[peer].visitorSetupPeerConnection(peer, function(){
-				self.connection[peer].makeOffer( function(offer){
-					console.log("send offer to " + peer);
-					self.socket.emit("SDPOffer", {
-						type: "SDPOffer",
-						local: self.local,
-						remote: peer,
-						offer: offer
+			self.initCamera(function(){
+				self.connection[peer].visitorSetupPeerConnection(peer, self.stream,  function(){
+					self.connection[peer].makeOffer( function(offer){
+						console.log("send offer to " + peer);
+						self.socket.emit("SDPOffer", {
+							type: "SDPOffer",
+							local: self.local,
+							remote: peer,
+							offer: offer
+						});
 					});
 				});
 			});
@@ -83,9 +87,11 @@ AllConnection.prototype.buildEnvironment = function(peer, cb){
 				cb();
 			})
 		}else {
-			console.log("initiate connection as a visitor");
-			self.connection[peer].visitorSetupPeerConnection(peer, function(){
-				cb();
+			self.initCamera(function(){
+				console.log("initiate connection as a visitor");
+				self.connection[peer].visitorSetupPeerConnection(peer, self.stream, function(){
+					cb();
+				});
 			});
 		}
 	});
@@ -156,13 +162,14 @@ function PeerConnection(local, peer, socket, localVideo){
 }
 
 //Visitor setup the p2p connection with a peer
-PeerConnection.prototype.visitorSetupPeerConnection = function(peer, cb) {
+PeerConnection.prototype.visitorSetupPeerConnection = function(peer, stream, cb) {
 	var self = this;
 	// Setup stream listening
 	console.log("listen to stream");
-	this.p2pConnection.onaddstream = function (e) {
+	this.p2pConnection.addStream(stream);
+	/*this.p2pConnection.onaddstream = function (e) {
 		self.localVideo.src = window.URL.createObjectURL(e.stream);
-	};
+	};*/
 
 	// Setup ice handling
 	console.log("start ice handling");
@@ -184,8 +191,10 @@ PeerConnection.prototype.visitorSetupPeerConnection = function(peer, cb) {
 PeerConnection.prototype.hostSetupPeerConnection = function(peer, stream, cb) {
 	var self = this;
 	// Add stream
-	this.p2pConnection.addStream(stream);
-	
+	/*this.p2pConnection.addStream(stream);*/
+	this.p2pConnection.onaddstream = function (e) {
+		self.localVideo.src = window.URL.createObjectURL(e.stream);
+	};
 	// Setup ice handling
 	this.p2pConnection.onicecandidate = function (event) {
 		if (event.candidate) {
@@ -212,7 +221,7 @@ PeerConnection.prototype.startConnection = function(cb){
 PeerConnection.prototype.makeOffer = function(cb)	{
 	var self = this;
 	this.p2pConnection.createOffer(function (sdpOffer) {
-		sdpOffer.sdp = sdpOffer.sdp.replace("a=sendrecv","a=recvonly");
+		sdpOffer.sdp = sdpOffer.sdp.replace(/a=sendrecv/g,"a=sendonly");
 		self.p2pConnection.setLocalDescription(sdpOffer);
 		cb(sdpOffer);
 	}, function(error){
@@ -226,7 +235,7 @@ PeerConnection.prototype.receiveOffer = function(sdpOffer, cb){
 	var SDPOffer = new RTCSessionDescription(sdpOffer.offer);
 	this.p2pConnection.setRemoteDescription(SDPOffer, function(){
 		self.p2pConnection.createAnswer(function (answer) {
-			answer.sdp = answer.sdp.replace("a=sendrecv","a=sendonly");
+			answer.sdp = answer.sdp.replace(/a=sendrecv/g,"a=recvonly");
 			self.p2pConnection.setLocalDescription(answer);
 			console.log(self.p2pConnection.localDescription);
 			console.log(self.p2pConnection.remoteDescription);
@@ -242,7 +251,6 @@ PeerConnection.prototype.receiveAnswer = function(sdpAnswer){
 	var SDPAnswer = new RTCSessionDescription(sdpAnswer.answer);
 	this.p2pConnection.setRemoteDescription(SDPAnswer,function(){}, function(){});
 	console.log(this.p2pConnection.localDescription);
-	console.log(this.p2pConnection.localDescription.sdp);
 	console.log(this.p2pConnection.remoteDescription);
 }
 
@@ -357,13 +365,13 @@ WebRTC.prototype.startCamera = function(cb){
 	var self = this;
 	console.log("start camera");
 	try {
-		self.allConnection.initCamera(function(){
+		//self.allConnection.initCamera(function(){
 			self.socket.emit("setupCamera", {
 				type: "setupCamera",
 				cameraSetupStatus: "success"
 			});
-		});
-		cb();
+	/*	});
+		cb();*/
 	}catch(e){
 		self.socket.emit("setupCamera", {
 			type: "setupCamera",

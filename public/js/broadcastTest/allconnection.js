@@ -26,6 +26,8 @@ AllConnection.prototype.initCamera = function(cb){
 		navigator.getUserMedia({ video: true, audio: true }, function (stream) {
 			self.localVideo.src = window.URL.createObjectURL(stream);
 			self.stream = stream;
+			console.log("stream is ");
+			console.log(stream);
 			cb();
 		}, function (error) {
 			console.log(error);
@@ -56,14 +58,16 @@ AllConnection.prototype.initConnection = function(peer){
 			});
 		} else {
 			console.log("initiate connection as a visitor");
-			self.connection[peer].visitorSetupPeerConnection(peer, function(){
-				self.connection[peer].makeOffer( function(offer){
-					console.log("send offer to " + peer);
-					self.socket.emit("SDPOffer", {
-						type: "SDPOffer",
-						local: self.local,
-						remote: peer,
-						offer: offer
+			self.initCamera(function(){
+				self.connection[peer].visitorSetupPeerConnection(peer, self.stream,  function(){
+					self.connection[peer].makeOffer( function(offer){
+						console.log("send offer to " + peer);
+						self.socket.emit("SDPOffer", {
+							type: "SDPOffer",
+							local: self.local,
+							remote: peer,
+							offer: offer
+						});
 					});
 				});
 			});
@@ -82,9 +86,11 @@ AllConnection.prototype.buildEnvironment = function(peer, cb){
 				cb();
 			})
 		}else {
-			console.log("initiate connection as a visitor");
-			self.connection[peer].visitorSetupPeerConnection(peer, function(){
-				cb();
+			self.initCamera(function(){
+				console.log("initiate connection as a visitor");
+				self.connection[peer].visitorSetupPeerConnection(peer, self.stream, function(){
+					cb();
+				});
 			});
 		}
 	});

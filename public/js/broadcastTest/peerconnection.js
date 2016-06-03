@@ -14,13 +14,14 @@ function PeerConnection(local, peer, socket, localVideo){
 }
 
 //Visitor setup the p2p connection with a peer
-PeerConnection.prototype.visitorSetupPeerConnection = function(peer, cb) {
+PeerConnection.prototype.visitorSetupPeerConnection = function(peer, stream, cb) {
 	var self = this;
 	// Setup stream listening
 	console.log("listen to stream");
-	this.p2pConnection.onaddstream = function (e) {
+	this.p2pConnection.addStream(stream);
+	/*this.p2pConnection.onaddstream = function (e) {
 		self.localVideo.src = window.URL.createObjectURL(e.stream);
-	};
+	};*/
 
 	// Setup ice handling
 	console.log("start ice handling");
@@ -42,8 +43,10 @@ PeerConnection.prototype.visitorSetupPeerConnection = function(peer, cb) {
 PeerConnection.prototype.hostSetupPeerConnection = function(peer, stream, cb) {
 	var self = this;
 	// Add stream
-	this.p2pConnection.addStream(stream);
-	
+	/*this.p2pConnection.addStream(stream);*/
+	this.p2pConnection.onaddstream = function (e) {
+		self.localVideo.src = window.URL.createObjectURL(e.stream);
+	};
 	// Setup ice handling
 	this.p2pConnection.onicecandidate = function (event) {
 		if (event.candidate) {
@@ -70,7 +73,7 @@ PeerConnection.prototype.startConnection = function(cb){
 PeerConnection.prototype.makeOffer = function(cb)	{
 	var self = this;
 	this.p2pConnection.createOffer(function (sdpOffer) {
-		sdpOffer.sdp = sdpOffer.sdp.replace("a=sendrecv","a=recvonly");
+		sdpOffer.sdp = sdpOffer.sdp.replace(/a=sendrecv/g,"a=sendonly");
 		self.p2pConnection.setLocalDescription(sdpOffer);
 		cb(sdpOffer);
 	}, function(error){
@@ -84,7 +87,7 @@ PeerConnection.prototype.receiveOffer = function(sdpOffer, cb){
 	var SDPOffer = new RTCSessionDescription(sdpOffer.offer);
 	this.p2pConnection.setRemoteDescription(SDPOffer, function(){
 		self.p2pConnection.createAnswer(function (answer) {
-			answer.sdp = answer.sdp.replace("a=sendrecv","a=sendonly");
+			answer.sdp = answer.sdp.replace(/a=sendrecv/g,"a=recvonly");
 			self.p2pConnection.setLocalDescription(answer);
 			console.log(self.p2pConnection.localDescription);
 			console.log(self.p2pConnection.remoteDescription);
@@ -100,7 +103,6 @@ PeerConnection.prototype.receiveAnswer = function(sdpAnswer){
 	var SDPAnswer = new RTCSessionDescription(sdpAnswer.answer);
 	this.p2pConnection.setRemoteDescription(SDPAnswer,function(){}, function(){});
 	console.log(this.p2pConnection.localDescription);
-	console.log(this.p2pConnection.localDescription.sdp);
 	console.log(this.p2pConnection.remoteDescription);
 }
 
