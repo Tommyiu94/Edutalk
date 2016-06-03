@@ -5,7 +5,6 @@ var Indicator = require('./Indicator');
 function AllConnection(){
 	var local;
 	var stream;
-	var host;
 	var socket;
 	this.connection = {};
 	this.indicator = new Indicator();
@@ -15,26 +14,30 @@ function AllConnection(){
 
 //initialise the setup of AllConnection
 AllConnection.prototype.init = function(user, socket){
-	var self = this;
 	this.local = user;
 	this.socket = socket;
 }
 
 //initialise the setup of own camera
 AllConnection.prototype.initCamera = function(cb){
-	var self = this;
-	if (this.indicator.hasUserMedia()) {
-		navigator.getUserMedia({ video: true, audio: true }, function (stream) {
-			self.localVideo.src = window.URL.createObjectURL(stream);
-			self.stream = stream;
-			console.log("stream is ");
-			console.log(stream);
-			cb();
-		}, function (error) {
-			console.log(error);
-		});
-	} else {
-		alert("Sorry, your browser does not support WebRTC.");
+	if (!this.stream){
+		var self = this;
+		if (this.indicator.hasUserMedia()) {
+			navigator.getUserMedia({ video: true, audio: true }, function (stream) {
+				self.localVideo.src = window.URL.createObjectURL(stream);
+				self.stream = stream;
+				console.log("stream is ");
+				console.log(stream);
+				cb();
+			}, function (error) {
+				console.log(error);
+			});
+		} else {
+			alert("Sorry, your browser does not support WebRTC.");
+		}
+	}
+	else {
+		cb();
 	}
 }
 
@@ -42,10 +45,9 @@ AllConnection.prototype.initCamera = function(cb){
 AllConnection.prototype.initConnection = function(peer){
 	var self = this;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
-	self.connection[peer].startConnection(function(){
-
-		if (self.local === self.host){
-			console.log("initiate connection as a host");
+	self.initCamera(function(){
+		self.connection[peer].startConnection(function(){
+			console.log("initiate connection");
 			self.connection[peer].hostSetupPeerConnection(peer, self.stream, function(){
 				self.connection[peer].makeOffer( function(offer){
 					console.log("send offer to " + peer);
@@ -57,57 +59,27 @@ AllConnection.prototype.initConnection = function(peer){
 					});
 				});
 			});
-		} else {
-			console.log("initiate connection as a visitor");
-			self.initCamera(function(){
-				self.connection[peer].visitorSetupPeerConnection(peer, self.stream,  function(){
-					self.connection[peer].makeOffer( function(offer){
-						console.log("send offer to " + peer);
-						self.socket.emit("SDPOffer", {
-							type: "SDPOffer",
-							local: self.local,
-							remote: peer,
-							offer: offer
-						});
-					});
-				});
-			});
-		}
-	})
-}
-
-//setup environment to be connected by others
-AllConnection.prototype.buildEnvironment = function(peer, cb){
-	var self = this;
-	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
-	self.connection[peer].startConnection(function(){
-		if (self.local === self.host){
-			console.log("initiate connection as a host");
-			self.connection[peer].hostSetupPeerConnection(peer, self.stream, function(){
-				cb();
-			})
-		}else {
-			self.initCamera(function(){
-				console.log("initiate connection as a visitor");
-				self.connection[peer].visitorSetupPeerConnection(peer, self.stream, function(){
-					cb();
-				});
-			});
-		}
+		});
 	});
 }
 
 //when receive an spd offer
 AllConnection.prototype.onOffer = function(sdpOffer){
 	var self = this;
-	self.connection[sdpOffer.remote].receiveOffer(sdpOffer, function(sdpAnswer){
-		self.socket.emit("SDPAnswer", {
-			type: "SDPAnswer",
-			local: self.local,
-			remote: sdpOffer.remote,
-			answer: sdpAnswer
+	peer = sdpOffer.remote;
+	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
+	self.connection[peer].startConnection(function(){
+		self.connection[peer].visitorSetupPeerConnection(peer, self.stream, function(){
+			self.connection[sdpOffer.remote].receiveOffer(sdpOffer, function(sdpAnswer){
+				self.socket.emit("SDPAnswer", {
+					type: "SDPAnswer",
+					local: self.local,
+					remote: sdpOffer.remote,
+					answer: sdpAnswer
+				});
+			});
 		});
-	}) 
+	});
 }
 
 //when receive an spd answer
@@ -154,7 +126,6 @@ function PeerConnection(local, peer, socket, localVideo){
 	this.remote = peer;
 	this.socket = socket;
 	this.localVideo = localVideo;
-	this.theirVideo = document.getElementById("remoteVideo");
 	this.configuration = {
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
@@ -166,10 +137,9 @@ PeerConnection.prototype.visitorSetupPeerConnection = function(peer, stream, cb)
 	var self = this;
 	// Setup stream listening
 	console.log("listen to stream");
-	this.p2pConnection.addStream(stream);
-	/*this.p2pConnection.onaddstream = function (e) {
+	this.p2pConnection.onaddstream = function (e) {
 		self.localVideo.src = window.URL.createObjectURL(e.stream);
-	};*/
+	};
 
 	// Setup ice handling
 	console.log("start ice handling");
@@ -191,10 +161,8 @@ PeerConnection.prototype.visitorSetupPeerConnection = function(peer, stream, cb)
 PeerConnection.prototype.hostSetupPeerConnection = function(peer, stream, cb) {
 	var self = this;
 	// Add stream
-	/*this.p2pConnection.addStream(stream);*/
-	this.p2pConnection.onaddstream = function (e) {
-		self.localVideo.src = window.URL.createObjectURL(e.stream);
-	};
+	this.p2pConnection.addStream(stream);
+	  
 	// Setup ice handling
 	this.p2pConnection.onicecandidate = function (event) {
 		if (event.candidate) {
@@ -304,13 +272,6 @@ function WebRTC(server){
 		self.allConnection.onCandidate(iceCandidate);
 	})
 
-	/* receive the status message of ICE setup from the peer
-	 * before sending a sdp offer
-	 * */
-	self.socket.on("ICESetupStatus", function(iceSetupData){
-		self.allConnection.initConnection(iceSetupData.remote);
-	})
-
 	// when a user in the room disconnnected
 	self.socket.on("disconnectedUser", function(disConnectedUserName) {
 		console.log("user " + disConnectedUserName + " is disconnected");
@@ -318,18 +279,10 @@ function WebRTC(server){
 		self.onUserDisconnect(disConnectedUserName);
 	})
 
-	// when the user receive a chat message
-	self.socket.on("chatMessage", function(chatMessageData){
-		self.onChatMessage(chatMessageData);
-	})
-
-	// when the user receive the name of the host
-	self.socket.on("host", function(hostData){
-		self.allConnection.host = hostData.host;
-	})
-
-	self.socket.on("startCamera", function(){
-		self.startCamera(function(){});
+	self.socket.on("initConnection", function(peer){
+		if (self.user !== peer){
+			self.allConnection.initConnection(peer);
+		}
 	});
 }
 
@@ -361,25 +314,6 @@ WebRTC.prototype.createRoom = function(roomId, successCallback, failCallback){
 	});
 }
 
-WebRTC.prototype.startCamera = function(cb){
-	var self = this;
-	console.log("start camera");
-	try {
-		//self.allConnection.initCamera(function(){
-			self.socket.emit("setupCamera", {
-				type: "setupCamera",
-				cameraSetupStatus: "success"
-			});
-	/*	});
-		cb();*/
-	}catch(e){
-		self.socket.emit("setupCamera", {
-			type: "setupCamera",
-			cameraSetupStatus: "fail"
-		});
-	}
-}
-
 WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	var self = this;
 	this.socket.emit("joinRoom", roomId);
@@ -392,31 +326,21 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	});
 }
 
-WebRTC.prototype.getPeers = function(cb){
-	var self = this;
-	this.socket.emit("peer");
-	self.socket.on("peer", function(peerList){
-		cb(peerList);
-	})
+WebRTC.prototype.sendCommand = function(command, successCallback, failCallback){
+	var cmd = command.split(" ");
+	if (cmd[0] === "uni"){
+		console.log("command is " + command);
+		this.socket.emit("peerConnection", cmd);
+		successCallback();
+	} else if (cmd[0] === "broadcast"){
+		this.socket.emit("broadcast", cmd);
+		successCallback();
+	} else {
+		failCallback();
+	}
 }
 
 WebRTC.prototype.onUserDisconnect = function(userDisconnected){
-}
-
-WebRTC.prototype.sendChatMessage = function(chatMessage){
-	var self = this;
-	this.socket.emit("chatMessage", {
-		type: "chatMessage",
-		user: self.user,
-		content: chatMessage
-	})
-}
-
-WebRTC.prototype.setHost = function(host){
-	this.socket.emit("host", {
-		type: "host",
-		host: host
-	})
 }
 
 WebRTC.prototype.onChatMessage = function(chatMessageData){

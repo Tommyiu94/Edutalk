@@ -6,7 +6,6 @@ function PeerConnection(local, peer, socket, localVideo){
 	this.remote = peer;
 	this.socket = socket;
 	this.localVideo = localVideo;
-	this.theirVideo = document.getElementById("remoteVideo");
 	this.configuration = {
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
@@ -18,10 +17,9 @@ PeerConnection.prototype.visitorSetupPeerConnection = function(peer, stream, cb)
 	var self = this;
 	// Setup stream listening
 	console.log("listen to stream");
-	this.p2pConnection.addStream(stream);
-	/*this.p2pConnection.onaddstream = function (e) {
+	this.p2pConnection.onaddstream = function (e) {
 		self.localVideo.src = window.URL.createObjectURL(e.stream);
-	};*/
+	};
 
 	// Setup ice handling
 	console.log("start ice handling");
@@ -43,10 +41,8 @@ PeerConnection.prototype.visitorSetupPeerConnection = function(peer, stream, cb)
 PeerConnection.prototype.hostSetupPeerConnection = function(peer, stream, cb) {
 	var self = this;
 	// Add stream
-	/*this.p2pConnection.addStream(stream);*/
-	this.p2pConnection.onaddstream = function (e) {
-		self.localVideo.src = window.URL.createObjectURL(e.stream);
-	};
+	this.p2pConnection.addStream(stream);
+	  
 	// Setup ice handling
 	this.p2pConnection.onicecandidate = function (event) {
 		if (event.candidate) {

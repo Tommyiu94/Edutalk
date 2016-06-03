@@ -41,13 +41,6 @@ function WebRTC(server){
 		self.allConnection.onCandidate(iceCandidate);
 	})
 
-	/* receive the status message of ICE setup from the peer
-	 * before sending a sdp offer
-	 * */
-	self.socket.on("ICESetupStatus", function(iceSetupData){
-		self.allConnection.initConnection(iceSetupData.remote);
-	})
-
 	// when a user in the room disconnnected
 	self.socket.on("disconnectedUser", function(disConnectedUserName) {
 		console.log("user " + disConnectedUserName + " is disconnected");
@@ -55,18 +48,10 @@ function WebRTC(server){
 		self.onUserDisconnect(disConnectedUserName);
 	})
 
-	// when the user receive a chat message
-	self.socket.on("chatMessage", function(chatMessageData){
-		self.onChatMessage(chatMessageData);
-	})
-
-	// when the user receive the name of the host
-	self.socket.on("host", function(hostData){
-		self.allConnection.host = hostData.host;
-	})
-
-	self.socket.on("startCamera", function(){
-		self.startCamera(function(){});
+	self.socket.on("initConnection", function(peer){
+		if (self.user !== peer){
+			self.allConnection.initConnection(peer);
+		}
 	});
 }
 
@@ -98,25 +83,6 @@ WebRTC.prototype.createRoom = function(roomId, successCallback, failCallback){
 	});
 }
 
-WebRTC.prototype.startCamera = function(cb){
-	var self = this;
-	console.log("start camera");
-	try {
-		//self.allConnection.initCamera(function(){
-			self.socket.emit("setupCamera", {
-				type: "setupCamera",
-				cameraSetupStatus: "success"
-			});
-	/*	});
-		cb();*/
-	}catch(e){
-		self.socket.emit("setupCamera", {
-			type: "setupCamera",
-			cameraSetupStatus: "fail"
-		});
-	}
-}
-
 WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	var self = this;
 	this.socket.emit("joinRoom", roomId);
@@ -129,31 +95,21 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	});
 }
 
-WebRTC.prototype.getPeers = function(cb){
-	var self = this;
-	this.socket.emit("peer");
-	self.socket.on("peer", function(peerList){
-		cb(peerList);
-	})
+WebRTC.prototype.sendCommand = function(command, successCallback, failCallback){
+	var cmd = command.split(" ");
+	if (cmd[0] === "uni"){
+		console.log("command is " + command);
+		this.socket.emit("peerConnection", cmd);
+		successCallback();
+	} else if (cmd[0] === "broadcast"){
+		this.socket.emit("broadcast", cmd);
+		successCallback();
+	} else {
+		failCallback();
+	}
 }
 
 WebRTC.prototype.onUserDisconnect = function(userDisconnected){
-}
-
-WebRTC.prototype.sendChatMessage = function(chatMessage){
-	var self = this;
-	this.socket.emit("chatMessage", {
-		type: "chatMessage",
-		user: self.user,
-		content: chatMessage
-	})
-}
-
-WebRTC.prototype.setHost = function(host){
-	this.socket.emit("host", {
-		type: "host",
-		host: host
-	})
 }
 
 WebRTC.prototype.onChatMessage = function(chatMessageData){
