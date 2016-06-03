@@ -49,7 +49,7 @@ io.on("connection", function(socket){
 				room[roomId] = {};
 				room[roomId].roomId = roomId;
 				user[socket.userName].room = roomId; 
-				user[socket.userName].join(room[roomId]); 
+				user[socket.userName].join(roomId); 
 
 				socket.emit("createRoom", {
 					type: "createRoom",
@@ -73,7 +73,7 @@ io.on("connection", function(socket){
 				});
 
 				user[socket.userName].room = roomId;
-				user[socket.userName].join(room[roomId]); 
+				user[socket.userName].join(roomId); 
 
 				socket.emit("joinRoom", {
 					type: "joinRoom",
@@ -159,11 +159,10 @@ io.on("connection", function(socket){
 		try {
 			console.log(io.sockets.adapter.rooms);
 			console.log(io.sockets.adapter.rooms[socket.room]);
-			var clients = io.sockets.adapter.rooms[room[socket.room]].sockets; 
+			var clients = io.sockets.adapter.rooms[socket.room].sockets; 
 			for (var clientId in clients ) {
 				var clientSocket = io.sockets.connected[clientId];
 				user[command[1]].emit("initConnection", clientSocket.userName);
-				console.log(clientSocket.userName);
 			}
 		} catch(e){
 			console.log(e);

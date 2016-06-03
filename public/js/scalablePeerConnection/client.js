@@ -1,9 +1,5 @@
 webrtc = new WebRTC("localhost:8080");
 
-webrtc.onUserDisconnect = function(userDisconnected){
-	console.log("user " + userDisconnected + " is disconnected");
-}
-
 function sendName(e){
 	if (e.keyCode == 13) {
 		var userName = document.getElementById("login").value;
