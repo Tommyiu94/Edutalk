@@ -26,9 +26,10 @@ i.right {
     -moz-transform: scale(-1, 1);
     -ms-transform: scale(-1, 1);
     -o-transform: scale(-1, 1);
-    -webkit-transform: scale(-1, 1);
+    -webkit-transform: translateZ(0);
     transform: scale(-1, 1);
     width: 100%;
+    z-index: 0;
 }
 
 .bigVideo {
@@ -37,7 +38,7 @@ i.right {
     pointer-events: none;
     position: absolute;
     transition: all 1s;
-    width: 70%;
+    z-index: 0;
 }
 
 body:-webkit-full-screen {
@@ -49,7 +50,7 @@ body:-webkit-full-screen {
     display: inline-block;
     vertical-align: baseline;
     float: right;
-    width: 29%;
+    width: 30%;
     overflow-y: auto;
 }
 
@@ -80,21 +81,21 @@ audio, canvas, progress, video {
 }
 
 #chatButton {
-    width: 30%;
     position: absolute;
     float: right;
     bottom: 0;
     right: 0;
+    z-index: 6;
 }
 
 #chatWindow {
     float: right;
-    width: 30%;
     position: absolute;
     bottom: 0;
     right: 0;
     display: none;
     word-break: break-all;
+    z-index: 100;
 }
 
 tbody {
@@ -102,9 +103,6 @@ tbody {
     display: block;
 }
 
-.ng-binding {
-    width: 0; /* Width will be set in script */
+.row {
+    margin-bottom: 0px;
 }
-
-
-

@@ -1,10 +1,11 @@
 <!-- room.html -->
 <!-- Videos -->
-<div class="bigVideo">
-  <video id="localVideo"></video>
-</div>
-<div id="remoteVideoContainer" style = "height:0">
-</div>
+<div class="row">
+  <div class="bigVideo col s12 m8 l8">
+   <video id="localVideo"></video>
+  </div>
+  <div id="remoteVideoContainer" style = "height:0"></div>
+
 
 <!-- Video function button -->
 <div class="fixed-action-btn" style="bottom: 0; right: initial;">
@@ -19,11 +20,11 @@
 </div>
 
 <!-- Chatroom -->
-<div class="chat">
-  <table class="white striped bordered" id="chatWindow">
+<div class="chat" ng-controller="chatController">
+  <table class="white striped bordered col s6 m4 l4" id="chatWindow" style="z-index: 2;">
     <tbody id="tableBody" style="max-height:0">
     <tr ng-repeat="message in messages track by $index">
-      <td>{{message}}</td>
+      <td ng-style="{ 'width': messageWidth }">{{message}}</td>
     </tr>
     </tbody>
     <tfoot>
@@ -37,5 +38,6 @@
     </tr>
     </tfoot>
   </table>
-  <a ng-click="showChat()" class="waves-effect waves-light btn" id="chatButton"><i class="material-icons right">chat_bubble</i>Chat</a>
+  <a ng-click="showChat()" class="waves-effect waves-light btn col s6 m4 l4" id="chatButton"><i class="material-icons right">chat_bubble</i>Chat</a>
+</div>
 </div>

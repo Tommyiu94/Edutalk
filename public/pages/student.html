@@ -3,13 +3,12 @@
   <br><br><br><br>
   <h1 class="header center s12 light">EduTalk</h1>
   <br><br><br>
-  <!-- <br>Input is : <strong>{{username}}</strong> -->
 </div>
 <div class="container">
   <div class="row">
     <div class="row valign-wrapper">
       <div class="input-field col s6">
-        <input ng-model="roomID" id="roomNumber" type="text" class="roomNo">
+        <input ng-model="roomID" id="roomNumber" type="text" class="roomNo" ng-enter="joinRoom(roomID)">
         <label for="roomNumber">Enter Room Number</label>
       </div>
       <a ng-click="joinRoom(roomID)" class="btn waves-effect waves-light col s2 roomURL" type="submit">Join</a>
