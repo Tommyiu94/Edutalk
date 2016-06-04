@@ -4,6 +4,7 @@ var io = require("socket.io")(app);
 var user = {};
 //room stores all the room id
 var room = {};
+var admin;
 
 app.listen(8080);
 
@@ -26,6 +27,7 @@ io.on("connection", function(socket){
 			} else{
 				user[userName] = socket;
 				user[userName].userName = userName;
+
 				socket.emit("login", {
 					type: "login",
 					userName: userName,
@@ -48,6 +50,7 @@ io.on("connection", function(socket){
 			} else{
 				room[roomId] = {};
 				room[roomId].roomId = roomId;
+				room[roomId].host = socket.userName;
 				user[socket.userName].room = roomId; 
 				user[socket.userName].join(roomId); 
 
@@ -74,6 +77,12 @@ io.on("connection", function(socket){
 
 				user[socket.userName].room = roomId;
 				user[socket.userName].join(roomId); 
+
+				admin.emit("newUser", {
+					type: "newUser",
+					userName: socket.userName,
+					host: room[roomId].host
+				});
 
 				socket.emit("joinRoom", {
 					type: "joinRoom",
@@ -148,11 +157,17 @@ io.on("connection", function(socket){
 
 	socket.on("peerConnection", function(command){
 		try {
+			user[command.host].emit("initConnection", command.newUser);
+			//	console.log("User " + command[1] + " initialise connection to user " + command[2]);
+		} catch(e){
+			console.log(e);
+		}
+		/*	try {
 			user[command[1]].emit("initConnection", command[2]);
 			console.log("User " + command[1] + " initialise connection to user " + command[2]);
 		} catch(e){
 			console.log(e);
-		}
+		}*/
 	})
 
 	socket.on("broadcast", function(command){
@@ -164,6 +179,14 @@ io.on("connection", function(socket){
 				var clientSocket = io.sockets.connected[clientId];
 				user[command[1]].emit("initConnection", clientSocket.userName);
 			}
+		} catch(e){
+			console.log(e);
+		}
+	})
+
+	socket.on("admin", function(){
+		try {
+			admin = socket;
 		} catch(e){
 			console.log(e);
 		}

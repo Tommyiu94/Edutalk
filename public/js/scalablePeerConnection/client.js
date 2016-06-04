@@ -25,7 +25,7 @@ function cRoom(e){
 			webrtc.createRoom(roomId, function(){
 				document.getElementById("feedback").value = "You successfully created Room ";
 			}, function(){
-				document.getElementById("feedback").value = "Current room already exists" ;
+				document.getElementById("feedback").value = "Current roomId already exists" ;
 			});
 			document.getElementById("createroom").value = "";
 		}
