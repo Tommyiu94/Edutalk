@@ -1,4 +1,5 @@
-var AllConnection = require('./AllConnection');
+var AllConnection = require('./allconnection.js');
+var io = require('socket.io-client');
 
 function WebRTC(server){
 	var self = this;
