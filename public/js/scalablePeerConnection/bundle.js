@@ -7264,7 +7264,8 @@ AllConnection.prototype.init = function(user, socket){
 
 //initialise the setup of own camera
 AllConnection.prototype.initCamera = function(cb){
-	if (!this.stream){
+//	To Do: Problem: create 2 video when 2 users enter simultaneously
+	if (!localVideo.src){
 		var self = this;
 		if (this.indicator.hasUserMedia()) {
 			navigator.getUserMedia({ video: true, audio: true }, function (stream) {
@@ -7281,6 +7282,7 @@ AllConnection.prototype.initCamera = function(cb){
 		}
 	}
 	else {
+		console.log(this.stream);
 		cb();
 	}
 }
@@ -7313,7 +7315,9 @@ AllConnection.prototype.onOffer = function(sdpOffer){
 	peer = sdpOffer.remote;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
 	self.connection[peer].startConnection(function(){
-		self.connection[peer].visitorSetupPeerConnection(peer, self.stream, function(){
+		self.connection[peer].visitorSetupPeerConnection(peer, function(stream){
+			self.stream = stream;
+		}, function(){
 			self.connection[sdpOffer.remote].receiveOffer(sdpOffer, function(sdpAnswer){
 				self.socket.emit("SDPAnswer", {
 					type: "SDPAnswer",
@@ -7378,15 +7382,18 @@ function PeerConnection(local, peer, socket, localVideo){
 }
 
 //Visitor setup the p2p connection with a peer
-PeerConnection.prototype.visitorSetupPeerConnection = function(peer, stream, cb) {
+PeerConnection.prototype.visitorSetupPeerConnection = function(peer, streamCallback, cb) {
 	var self = this;
 	// Setup stream listening
 	console.log("listen to stream");
 	this.p2pConnection.onaddstream = function (e) {
 		self.localVideo.src = window.URL.createObjectURL(e.stream);
+		streamCallback(e.stream);
 	};
 
-	// Setup ice handling
+	
+
+//	Setup ice handling
 	console.log("start ice handling");
 	this.p2pConnection.onicecandidate = function (event) {
 		if (event.candidate) {
@@ -7407,7 +7414,7 @@ PeerConnection.prototype.hostSetupPeerConnection = function(peer, stream, cb) {
 	var self = this;
 	// Add stream
 	this.p2pConnection.addStream(stream);
-	  
+
 	// Setup ice handling
 	this.p2pConnection.onicecandidate = function (event) {
 		if (event.candidate) {

@@ -54,6 +54,11 @@ io.on("connection", function(socket){
 				user[socket.userName].room = roomId; 
 				user[socket.userName].join(roomId); 
 
+				admin.emit("newUser", {
+					type: "newUser",
+					userName: socket.userName,
+				});
+
 				socket.emit("createRoom", {
 					type: "createRoom",
 					userName: socket.userName,
@@ -81,7 +86,6 @@ io.on("connection", function(socket){
 				admin.emit("newUser", {
 					type: "newUser",
 					userName: socket.userName,
-					host: room[roomId].host
 				});
 
 				socket.emit("joinRoom", {
@@ -153,6 +157,10 @@ io.on("connection", function(socket){
 	})
 
 	socket.on("disconnect", function(){
+		admin.emit("disconnectedUser", {
+			type: "disconnectedUser",
+			userName: socket.userName,
+		});
 		socket.broadcast.to(socket.room).emit("disconnectedUser", socket.userName);
 		user[socket.userName] = null;
 	})

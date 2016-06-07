@@ -19,7 +19,8 @@ AllConnection.prototype.init = function(user, socket){
 
 //initialise the setup of own camera
 AllConnection.prototype.initCamera = function(cb){
-	if (!this.stream){
+//	To Do: Problem: create 2 video when 2 users enter simultaneously
+	if (!localVideo.src){
 		var self = this;
 		if (this.indicator.hasUserMedia()) {
 			navigator.getUserMedia({ video: true, audio: true }, function (stream) {
@@ -36,6 +37,7 @@ AllConnection.prototype.initCamera = function(cb){
 		}
 	}
 	else {
+		console.log(this.stream);
 		cb();
 	}
 }
@@ -68,7 +70,9 @@ AllConnection.prototype.onOffer = function(sdpOffer){
 	peer = sdpOffer.remote;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
 	self.connection[peer].startConnection(function(){
-		self.connection[peer].visitorSetupPeerConnection(peer, self.stream, function(){
+		self.connection[peer].visitorSetupPeerConnection(peer, function(stream){
+			self.stream = stream;
+		}, function(){
 			self.connection[sdpOffer.remote].receiveOffer(sdpOffer, function(sdpAnswer){
 				self.socket.emit("SDPAnswer", {
 					type: "SDPAnswer",

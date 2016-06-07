@@ -13,15 +13,18 @@ function PeerConnection(local, peer, socket, localVideo){
 }
 
 //Visitor setup the p2p connection with a peer
-PeerConnection.prototype.visitorSetupPeerConnection = function(peer, stream, cb) {
+PeerConnection.prototype.visitorSetupPeerConnection = function(peer, streamCallback, cb) {
 	var self = this;
 	// Setup stream listening
 	console.log("listen to stream");
 	this.p2pConnection.onaddstream = function (e) {
 		self.localVideo.src = window.URL.createObjectURL(e.stream);
+		streamCallback(e.stream);
 	};
 
-	// Setup ice handling
+	
+
+//	Setup ice handling
 	console.log("start ice handling");
 	this.p2pConnection.onicecandidate = function (event) {
 		if (event.candidate) {
@@ -42,7 +45,7 @@ PeerConnection.prototype.hostSetupPeerConnection = function(peer, stream, cb) {
 	var self = this;
 	// Add stream
 	this.p2pConnection.addStream(stream);
-	  
+
 	// Setup ice handling
 	this.p2pConnection.onicecandidate = function (event) {
 		if (event.candidate) {

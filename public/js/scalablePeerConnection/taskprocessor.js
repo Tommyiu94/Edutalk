@@ -9,6 +9,8 @@ var adminSocket;
 
 var cpuStatus = MESSAGE_CPU_FREE;
 
+console.log("taskProcessor start to work");
+
 io.on("connection", function(taskSocket){
 
 	taskSocket.on("cpu", function(){
@@ -19,20 +21,37 @@ io.on("connection", function(taskSocket){
 		adminSocket = taskSocket;
 	});
 
-	taskSocket.on("peerConnection", function(userData){
-
-		tasks.push(userData);
+	taskSocket.on("newUser", function(userData){
+		tasks.push({
+			type: "newUser",
+			userName: userData.userName
+		});
 //		TO DO: setTime out for cpu processing
 		if (cpuStatus === MESSAGE_CPU_FREE){
 			cpuStatus = MESSAGE_CPU_BUSY;
-			console.log(tasks.length);
 			userProcessing = tasks.shift();
-			console.log(tasks.length);
 
-			cpuSocket.emit("peerConnection", {
-				type: "peerConnection",
+			cpuSocket.emit("newUser", {
+				type: "newUser",
 				userName: userProcessing.userName,
 				host: userProcessing.host
+			});
+		}
+	});
+
+	taskSocket.on("disconnectedUser", function(userData){
+		tasks.push({
+			type: "disconnectedUser",
+			userName: userData.userName
+		});
+
+		if (cpuStatus === MESSAGE_CPU_FREE){
+			cpuStatus = MESSAGE_CPU_BUSY;
+			userProcessing = tasks.shift();
+
+			cpuSocket.emit("disconnectedUser", {
+				type: "disconnectedUser",
+				userName: userProcessing.userName,
 			});
 		}
 	});
@@ -50,14 +69,18 @@ io.on("connection", function(taskSocket){
 
 		if (tasks.length !== 0){
 			userProcessing = tasks.shift;
-			cpuSocket.emit("peerConnection", {
-				type: "peerConnection",
-				userName: userData.userName,
-				host: userData.host
+			cpuSocket.emit(userProcessing.type, {
+				type: userProcessing.type,
+				userName: userProcessing.userName,
 			});
 		} else {
 			cpuStatus = MESSAGE_CPU_FREE;		
 		}
 	});
+
+	taskSocket.on("host", function(userData){
+		cpuStatus = MESSAGE_CPU_FREE;	
+//		TO DO: to be filled
+	})
 
 });
