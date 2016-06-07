@@ -5,6 +5,16 @@
 npm install
 ```
 
+## Bundle
+```
+double click bundle.bat
+```
+
+## Test
+```
+double click test.bat
+```
+
 ## Current limitation
 All user who join the room will be automatically linked to 
 the host.
