@@ -142,6 +142,8 @@ io.on("connection", function(socket){
 
 	socket.on("candidate", function(iceCandidate){
 		console.log("an ice candidate is transfered");
+		console.log(iceCandidate.local);
+		console.log(iceCandidate.remote);
 		user[iceCandidate.remote].emit("candidate", {
 			type: "candidate",
 			local: iceCandidate.remote,
@@ -155,19 +157,14 @@ io.on("connection", function(socket){
 		user[socket.userName] = null;
 	})
 
-	socket.on("peerConnection", function(command){
+	socket.on("peerConnection", function(userData){
 		try {
-			user[command.host].emit("initConnection", command.newUser);
+			user[userData.host].emit("initConnection", userData.userName);
 			//	console.log("User " + command[1] + " initialise connection to user " + command[2]);
 		} catch(e){
 			console.log(e);
 		}
-		/*	try {
-			user[command[1]].emit("initConnection", command[2]);
-			console.log("User " + command[1] + " initialise connection to user " + command[2]);
-		} catch(e){
-			console.log(e);
-		}*/
+
 	})
 
 	socket.on("broadcast", function(command){
