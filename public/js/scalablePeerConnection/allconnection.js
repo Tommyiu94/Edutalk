@@ -65,13 +65,14 @@ AllConnection.prototype.initConnection = function(peer){
 }
 
 //when receive an spd offer
-AllConnection.prototype.onOffer = function(sdpOffer){
+AllConnection.prototype.onOffer = function(sdpOffer, cb){
 	var self = this;
 	peer = sdpOffer.remote;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
 	self.connection[peer].startConnection(function(){
 		self.connection[peer].visitorSetupPeerConnection(peer, function(stream){
 			self.stream = stream;
+			cb();
 		}, function(){
 			self.connection[sdpOffer.remote].receiveOffer(sdpOffer, function(sdpAnswer){
 				self.socket.emit("SDPAnswer", {
@@ -93,6 +94,10 @@ AllConnection.prototype.onAnswer = function(sdpAnswer){
 //when receive an ice candidate
 AllConnection.prototype.onCandidate = function(iceCandidate){
 	this.connection[iceCandidate.remote].addCandidate(iceCandidate);
+}
+
+AllConnection.prototype.deleteConnection = function(peer){
+	self.connection[peer] = null;
 }
 
 module.exports = AllConnection;

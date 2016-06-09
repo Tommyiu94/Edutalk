@@ -7310,13 +7310,14 @@ AllConnection.prototype.initConnection = function(peer){
 }
 
 //when receive an spd offer
-AllConnection.prototype.onOffer = function(sdpOffer){
+AllConnection.prototype.onOffer = function(sdpOffer, cb){
 	var self = this;
 	peer = sdpOffer.remote;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
 	self.connection[peer].startConnection(function(){
 		self.connection[peer].visitorSetupPeerConnection(peer, function(stream){
 			self.stream = stream;
+			cb();
 		}, function(){
 			self.connection[sdpOffer.remote].receiveOffer(sdpOffer, function(sdpAnswer){
 				self.socket.emit("SDPAnswer", {
@@ -7338,6 +7339,10 @@ AllConnection.prototype.onAnswer = function(sdpAnswer){
 //when receive an ice candidate
 AllConnection.prototype.onCandidate = function(iceCandidate){
 	this.connection[iceCandidate.remote].addCandidate(iceCandidate);
+}
+
+AllConnection.prototype.deleteConnection = function(peer){
+	self.connection[peer] = null;
 }
 
 module.exports = AllConnection;
@@ -7487,6 +7492,7 @@ var io = require('socket.io-client');
 function WebRTC(server){
 	var self = this;
 	var user;
+	var peer;
 	this.allConnection = new AllConnection();;
 	this.socket = io(server);
 
@@ -7496,22 +7502,13 @@ function WebRTC(server){
 		document.getElementById("feedback").value = feedback;
 	})
 
-	//new user enter the room
-	self.socket.on("newUser", function(newUserData) {
-		self.allConnection.buildEnvironment(newUserData, function(){
-			self.socket.emit("ICESetupStatus", {
-				type: "ICESetupStatus",
-				local: self.user,
-				remote: newUserData,
-				ICESetupStatus: "DONE"
-			});
-			console.log("ICE setup Ready");
-		});
-	})
-
 	//receive a sdp offer
 	self.socket.on("SDPOffer", function(sdpOffer) {
-		self.allConnection.onOffer(sdpOffer);
+		self.allConnection.onOffer(sdpOffer, function(){
+			if (self.peer){
+				self.allConnection.initConnection(self.peer);
+			}
+		});
 	})
 
 	//receive a sdp answer
@@ -7528,14 +7525,28 @@ function WebRTC(server){
 	// when a user in the room disconnnected
 	self.socket.on("disconnectedUser", function(disConnectedUserName) {
 		console.log("user " + disConnectedUserName + " is disconnected");
-		self.allConnection.connection[disConnectedUserName] = null;
 		self.onUserDisconnect(disConnectedUserName);
 	})
 
+	// initialize 1 way peer connection or start host's camera
 	self.socket.on("initConnection", function(peer){
-		if (self.user !== peer){
+		if (self.user === peer){
+			console.log("init camera");
+			self.allConnection.initCamera(function(){
+				/* setup camera before build connection	
+				 * self.onHostSetup();
+				 */
+			});
+		}else {		
 			self.allConnection.initConnection(peer);
+			self.peer = peer;
 		}
+	});
+
+	// delete peer connection when peer left
+	self.socket.on("deleteConnection", function(peer){
+		self.allConnection.deleteConnection(peer);
+		self.peer = null;
 	});
 }
 
@@ -7598,6 +7609,11 @@ WebRTC.prototype.onUserDisconnect = function(userDisconnected){
 
 WebRTC.prototype.onChatMessage = function(chatMessageData){
 }
+
+/*
+WebRTC.prototype.onHostSetup = function(){
+}
+ */
 
 module.exports = WebRTC;
 

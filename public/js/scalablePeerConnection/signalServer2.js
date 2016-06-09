@@ -10,7 +10,6 @@ app.listen(8080);
 
 io.on("connection", function(socket){
 
-	// new user login
 	socket.on("login", function(userName){
 
 		console.log("User " + userName + " logins");
@@ -39,41 +38,39 @@ io.on("connection", function(socket){
 			}
 	})
 
-	// a host create a new room
 	socket.on("createRoom", function(roomId){
 		try {
-			/*if (room[roomId]){
+			if (room[roomId]){
 				socket.emit("createRoom", {
 					type: "createRoom",
 					userName: socket.userName,
 					room: roomId,
 					status: "fail"
 				});
-			} else{*/
-			room[roomId] = {};
-			room[roomId].roomId = roomId;
-			room[roomId].host = socket.userName;
-			user[socket.userName].room = roomId; 
-			user[socket.userName].join(roomId); 
-			admin.emit("host", {
-				type: "host",
-				host: socket.userName
-			});
+			} else{
+				room[roomId] = {};
+				room[roomId].roomId = roomId;
+				room[roomId].host = socket.userName;
+				user[socket.userName].room = roomId; 
+				user[socket.userName].join(roomId); 
+				admin.emit("host", {
+					type: "host",
+					host: socket.userName
+				});
 
-			socket.emit("createRoom", {
-				type: "createRoom",
-				userName: socket.userName,
-				room: roomId,
-				status: "success"
-			});
+				socket.emit("createRoom", {
+					type: "createRoom",
+					userName: socket.userName,
+					room: roomId,
+					status: "success"
+				});
 
-			//}
+			}
 		}catch (e){
 			console.log(e);
 		}
 	})
 
-	// an user join a room
 	socket.on("joinRoom", function(roomId){
 		try {
 			if (room[roomId]){
@@ -110,7 +107,6 @@ io.on("connection", function(socket){
 			}
 	})
 
-	//  an user send an offer to peer
 	socket.on("SDPOffer", function(sdpOffer){
 
 		console.log(sdpOffer.local + " is Sending offer to " + sdpOffer.remote);
@@ -130,7 +126,6 @@ io.on("connection", function(socket){
 			}
 	})
 
-	//  an user send an answer to peer
 	socket.on("SDPAnswer", function(sdpAnswer){
 		console.log( sdpAnswer.remote + " is Receiving Answer from " + sdpAnswer.local);
 
@@ -150,7 +145,6 @@ io.on("connection", function(socket){
 			}
 	})
 
-	//  an user send an ICECandidate to peer
 	socket.on("candidate", function(iceCandidate){
 		console.log("an ice candidate is transfered");
 		console.log(iceCandidate.local);
@@ -163,7 +157,6 @@ io.on("connection", function(socket){
 		});
 	})
 
-	//	 an user disconnect
 	socket.on("disconnect", function(){
 		if (socket.userName){
 			admin.emit("disconnectedUser", {
@@ -176,7 +169,6 @@ io.on("connection", function(socket){
 		}
 	})
 
-	// a new peer connection is asked to be built
 	socket.on("newPeerConnection", function(userData){
 		try {
 			console.log("host is " + userData.host + " and username is " + userData.userName);
@@ -188,7 +180,6 @@ io.on("connection", function(socket){
 
 	})
 
-	// a peer connection is asked to be deleted
 	socket.on("deletePeerConnection", function(userData){
 		try {
 			console.log("peer is " + userData.peer + " and username is " + userData.userName);
@@ -199,7 +190,6 @@ io.on("connection", function(socket){
 		}
 	})
 
-	// admin is connected
 	socket.on("admin", function(){
 		try {
 			admin = socket;

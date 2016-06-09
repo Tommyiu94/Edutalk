@@ -1,24 +1,19 @@
 var io = require('socket.io-client');
 var cpuSocket = io.connect("http://localhost:8888");
-var Room = require('./room.js');
+var Room = require('./room3.js');
 var userList = {};
 
-cpuSocket.emit("cpu");
+cpuSocket.emit("cpu3");
 
-console.log("cpu start to work");
-/*	Create new room according to host name or join 
- * a existing room if a new user enter. Delete an existing 
- * user in the room if it is disconnected*/
+console.log("cpu2 start to work");
 
 cpuSocket.on("host", function(userData){
 	console.log("Set Host " + userData.host);
-	if (!userList[userData.host]){
-		userList[userData.host] = new Room();
-	}
-	userList[userData.host].addHost(userData.host, function(userName, host){
+	userList[userData.host] = new Room();
+	userList[userData.host].addHost(userData.host, function(host){
 		cpuSocket.emit("newPeerConnection", {
 			type: "newPeerConnection",
-			userName: userName,
+			userName: host,
 			host: host
 		});
 		console.log(host)
@@ -50,25 +45,21 @@ cpuSocket.on("newUser", function(userData){
 
 cpuSocket.on("disconnectedUser", function(userData){
 	console.log("start to work");
-
-	userList[userData.host].deleteUser(userData.userName, function(userName, host){
-		
-		cpuSocket.emit("deletePeerConnection", {
-			type: "deletePeerConnection",
-			peer: userData.userName,
-			child: userName,
-			parent: host
-		});
-
-		cpuSocket.emit("newPeerConnection", {
+	if (userData.userName === userData.host){
+		userList[userData.host] = null;
+	}else{
+		userList[userData.host].deleteUser(userData.userName, function(userName, host){
+			/*	cpuSocket.emit("newPeerConnection", {
 			type: "newPeerConnection",
 			userName: userName,
 			host: host
+		});*/
+			cpuSocket.emit("freeCPU");
+		}, function(){
+			cpuSocket.emit("deleteUserFailure", {
+				type: "deleteUserFailure",
+				userName: userData.userName,
+			});
 		});
-	}, function(){
-		cpuSocket.emit("deleteUserFailure", {
-			type: "deleteUserFailure",
-			userName: userData.userName,
-		});
-	});
+	}
 });
