@@ -12,3 +12,5 @@ public/js/broadcastTest/node_modules/**
 public/js/scalablePeerConnection/node_modules/**
 
 
+
+angular-educast/node_modules/**

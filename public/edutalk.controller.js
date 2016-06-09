@@ -7,7 +7,7 @@ angular
   .controller('roomController', roomController)
   .controller('chatController', chatController);
 
-// Main Controller
+// Main Controller for home.html
 function mainController($scope, $location, DataService, WebRTCService) {
 
   // Configure background color (body)
