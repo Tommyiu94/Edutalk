@@ -1,0 +1,44 @@
+<!-- Home.html -->
+<div id="staffContainer" class="black waves-effect" style = height:0>
+  <a ng-click="openStaffModal()"><img src="image/staff.jpg" id="staffIMG" class="circle"></a>
+</div>
+<div id="studentContainer" class="black waves-effect" style = height:0>
+  <a ng-click="openStudentModal()"><img src="image/student.jpg" id="studentIMG" class="circle"></a>
+</div>
+<!-- Staff Login Modal -->
+<div id="staffModal" class="modal">
+  <div class="modal-content center-align">
+    <h2 class="thin">Staff Login</h2>
+    <!-- Input field for staff -->
+    <div class="row">
+      <div class="col s12">
+        <div class="row input-field col s12">
+          <input id="staffUser" type="text" ng-model="username" ng-enter="staff_login()">
+          <label for="staffUser">Enter your username here</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a ng-click="staff_login()" class="btn modal-action modal-close waves-effect waves-green">Login >></a>
+  </div>
+</div>
+<!-- Student Login Modal -->
+<div id="studentModal" class="modal">
+  <div class="modal-content center-align">
+    <h2 class="thin">Student Login</h2>
+    <!-- Input field for student -->
+    <div class="row">
+      <div class="col s12">
+        <div class="row input-field col s12">
+          <input id="studentUser" type="text" ng-model="username" ng-enter="student_login()">
+          <label for="studentUser">Enter your username here</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a ng-click="student_login()" class="btn modal-action modal-close waves-effect waves-green">Login >></a>
+  </div>
+</div>
+
