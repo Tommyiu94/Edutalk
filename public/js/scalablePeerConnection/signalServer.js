@@ -171,7 +171,12 @@ io.on("connection", function(socket){
 				userName: socket.userName,
 				host:	room[socket.room].host
 			});
-			socket.broadcast.to(socket.room).emit("disconnectedUser", socket.userName);
+			socket.broadcast.to(socket.room).emit("message", {
+				type: "message",
+				action: "disconnect",
+				user: socket.userName,
+				content: ""
+			});
 			user[socket.userName] = null;
 		}
 	})
@@ -199,7 +204,14 @@ io.on("connection", function(socket){
 		}
 	})
 
-	// admin is connected
+	// a user send a message
+	socket.on("message", function(messageData){
+		console.log(messageData.action);
+		socket.broadcast.to(socket.room).emit("message", messageData);
+	});
+
+
+	//	admin is connected
 	socket.on("admin", function(){
 		try {
 			admin = socket;

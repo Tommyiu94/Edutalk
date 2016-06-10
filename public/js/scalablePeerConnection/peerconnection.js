@@ -10,6 +10,7 @@ function PeerConnection(local, peer, socket, localVideo){
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
 	};
+	console.log("local video is " + localVideo);
 }
 
 //Visitor setup the p2p connection with a peer

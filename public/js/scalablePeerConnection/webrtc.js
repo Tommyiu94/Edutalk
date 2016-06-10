@@ -38,6 +38,12 @@ function WebRTC(server){
 	self.socket.on("disconnectedUser", function(disConnectedUserName) {
 		console.log("user " + disConnectedUserName + " is disconnected");
 		self.onUserDisconnect(disConnectedUserName);
+		self.socket.emit("message", {
+			type: "message",
+			action: "leave",
+			user: self.user,
+			content: ""
+		});
 	})
 
 	// initialize 1 way peer connection or start host's camera
@@ -59,6 +65,11 @@ function WebRTC(server){
 	self.socket.on("deleteConnection", function(peer){
 		self.allConnection.deleteConnection(peer);
 		self.peer = null;
+	});
+	
+	self.socket.on("message", function(messageData){
+		console.log("received message");
+		self.onMessage(messageData);
 	});
 }
 
@@ -95,6 +106,12 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	this.socket.emit("joinRoom", roomId);
 	this.socket.on("joinRoom", function(joinRoomResponse){
 		if (joinRoomResponse.status === "success") {
+			self.socket.emit("message", {
+				type: "message",
+				action: "join",
+				user: self.user,
+				content: ""
+			});
 			successCallback();
 		} else if (joinRoomResponse.status === "fail") {
 			failCallback();
@@ -102,24 +119,20 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	});
 }
 
-WebRTC.prototype.sendCommand = function(command, successCallback, failCallback){
-	var cmd = command.split(" ");
-	if (cmd[0] === "uni"){
-		console.log("command is " + command);
-		this.socket.emit("peerConnection", cmd);
-		successCallback();
-	} else if (cmd[0] === "broadcast"){
-		this.socket.emit("broadcast", cmd);
-		successCallback();
-	} else {
-		failCallback();
-	}
-}
-
 WebRTC.prototype.onUserDisconnect = function(userDisconnected){
 }
 
-WebRTC.prototype.onChatMessage = function(chatMessageData){
+WebRTC.prototype.sendChatMessage = function(chatMessage){
+	var self = this;
+	self.socket.emit("message", {
+		type: "message",
+		action: "chat",
+		user: self.user,
+		content: chatMessage
+	})
+}
+
+WebRTC.prototype.onMessage = function(messageData){
 }
 
 /*

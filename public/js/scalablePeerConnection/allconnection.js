@@ -7,8 +7,7 @@ function AllConnection(){
 	var socket;
 	this.connection = {};
 	this.indicator = new Indicator();
-	this.localVideo = document.getElementById("localVideo");
-	this.localVideo.autoplay = true;
+	var localVideo;
 }
 
 //initialise the setup of AllConnection
@@ -19,6 +18,8 @@ AllConnection.prototype.init = function(user, socket){
 
 //initialise the setup of own camera
 AllConnection.prototype.initCamera = function(cb){
+	this.localVideo = document.getElementById("localVideo");
+	this.localVideo.autoplay = true;
 //	To Do: Problem: create 2 video when 2 users enter simultaneously
 	if (!localVideo.src){
 		var self = this;
@@ -43,7 +44,7 @@ AllConnection.prototype.initCamera = function(cb){
 }
 
 //initialise a connection with peers
-AllConnection.prototype.initConnection = function(peer){
+AllConnection.prototype.initConnection = function(peer){	
 	var self = this;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
 	self.initCamera(function(){
@@ -67,6 +68,8 @@ AllConnection.prototype.initConnection = function(peer){
 //when receive an spd offer
 AllConnection.prototype.onOffer = function(sdpOffer, cb){
 	var self = this;
+	self.localVideo = document.getElementById("localVideo");
+	self.localVideo.autoplay = true;
 	peer = sdpOffer.remote;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
 	self.connection[peer].startConnection(function(){

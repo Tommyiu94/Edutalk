@@ -48,18 +48,15 @@ function jRoom(e){
 	}
 }
 
-function sendCommand(e){
+function sendMessage(e){
 	if (e.keyCode == 13) {
-		var command = document.getElementById("command").value;
-		if (command.length == 0)
-			document.getElementById("feedback").value = "Input a valid command";
-		else {
-			webrtc.sendCommand(command, function(){
-				document.getElementById("feedback").value = "You successfully sent a command";
-			}, function(){
-				document.getElementById("feedback").value = "Input a valid command" ;
-			});
-			document.getElementById("command").value = "";
-		}
-	}
+		var message = document.getElementById("message").value;
+		webrtc.sendChatMessage(message);
+		console.log("message is " + message);
+		document.getElementById("message").value = "";
+	}	
+}
+
+webrtc.onMessage = function(messageData) {
+	console.log(messageData);
 }

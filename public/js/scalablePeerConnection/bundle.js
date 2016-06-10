@@ -7252,8 +7252,7 @@ function AllConnection(){
 	var socket;
 	this.connection = {};
 	this.indicator = new Indicator();
-	this.localVideo = document.getElementById("localVideo");
-	this.localVideo.autoplay = true;
+	var localVideo;
 }
 
 //initialise the setup of AllConnection
@@ -7264,6 +7263,8 @@ AllConnection.prototype.init = function(user, socket){
 
 //initialise the setup of own camera
 AllConnection.prototype.initCamera = function(cb){
+	this.localVideo = document.getElementById("localVideo");
+	this.localVideo.autoplay = true;
 //	To Do: Problem: create 2 video when 2 users enter simultaneously
 	if (!localVideo.src){
 		var self = this;
@@ -7288,7 +7289,7 @@ AllConnection.prototype.initCamera = function(cb){
 }
 
 //initialise a connection with peers
-AllConnection.prototype.initConnection = function(peer){
+AllConnection.prototype.initConnection = function(peer){	
 	var self = this;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
 	self.initCamera(function(){
@@ -7312,6 +7313,8 @@ AllConnection.prototype.initConnection = function(peer){
 //when receive an spd offer
 AllConnection.prototype.onOffer = function(sdpOffer, cb){
 	var self = this;
+	self.localVideo = document.getElementById("localVideo");
+	self.localVideo.autoplay = true;
 	peer = sdpOffer.remote;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
 	self.connection[peer].startConnection(function(){
@@ -7384,6 +7387,7 @@ function PeerConnection(local, peer, socket, localVideo){
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
 	};
+	console.log("local video is " + localVideo);
 }
 
 //Visitor setup the p2p connection with a peer
@@ -7526,6 +7530,12 @@ function WebRTC(server){
 	self.socket.on("disconnectedUser", function(disConnectedUserName) {
 		console.log("user " + disConnectedUserName + " is disconnected");
 		self.onUserDisconnect(disConnectedUserName);
+		self.socket.emit("message", {
+			type: "message",
+			action: "leave",
+			user: self.user,
+			content: ""
+		});
 	})
 
 	// initialize 1 way peer connection or start host's camera
@@ -7547,6 +7557,11 @@ function WebRTC(server){
 	self.socket.on("deleteConnection", function(peer){
 		self.allConnection.deleteConnection(peer);
 		self.peer = null;
+	});
+	
+	self.socket.on("message", function(messageData){
+		console.log("received message");
+		self.onMessage(messageData);
 	});
 }
 
@@ -7583,6 +7598,12 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	this.socket.emit("joinRoom", roomId);
 	this.socket.on("joinRoom", function(joinRoomResponse){
 		if (joinRoomResponse.status === "success") {
+			self.socket.emit("message", {
+				type: "message",
+				action: "join",
+				user: self.user,
+				content: ""
+			});
 			successCallback();
 		} else if (joinRoomResponse.status === "fail") {
 			failCallback();
@@ -7590,24 +7611,20 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	});
 }
 
-WebRTC.prototype.sendCommand = function(command, successCallback, failCallback){
-	var cmd = command.split(" ");
-	if (cmd[0] === "uni"){
-		console.log("command is " + command);
-		this.socket.emit("peerConnection", cmd);
-		successCallback();
-	} else if (cmd[0] === "broadcast"){
-		this.socket.emit("broadcast", cmd);
-		successCallback();
-	} else {
-		failCallback();
-	}
-}
-
 WebRTC.prototype.onUserDisconnect = function(userDisconnected){
 }
 
-WebRTC.prototype.onChatMessage = function(chatMessageData){
+WebRTC.prototype.sendChatMessage = function(chatMessage){
+	var self = this;
+	self.socket.emit("message", {
+		type: "message",
+		action: "chat",
+		user: self.user,
+		content: chatMessage
+	})
+}
+
+WebRTC.prototype.onMessage = function(messageData){
 }
 
 /*
@@ -7616,6 +7633,5 @@ WebRTC.prototype.onHostSetup = function(){
  */
 
 module.exports = WebRTC;
-
 },{"./allconnection.js":49,"socket.io-client":2}]},{},[52])(52)
 });
