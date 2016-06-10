@@ -177,7 +177,12 @@ function chatController($scope, DataService, WebRTCService, $routeParams) {
 
   // Welcome message in chatbox
   var welcomeMessage = "You are now in room " + roomID + ".";
-  var messages = [welcomeMessage];
+  var welcomeMessageData = {
+    me: false,
+    content: welcomeMessage
+  };
+
+  var messages = [welcomeMessageData];
 
   // Capture message input
   var sendMessage = function () {
@@ -189,24 +194,43 @@ function chatController($scope, DataService, WebRTCService, $routeParams) {
   $scope.sendMessage = sendMessage;
 
   // On Message Sent
-  webrtc.onChatMessage = function (chatMessageData) {
-
+  webrtc.onMessage = function (chatMessageData) {
     if (chatMessageData.action == "chat") {
-      var messageFormat = chatMessageData.sender + ":" + " " + chatMessageData.content;
-      messages.push(messageFormat);
+      if (chatMessageData.user == username) {
+        var messageData = {
+          type: 'me',
+          user: chatMessageData.user,
+          content: chatMessageData.content
+        };
+        //$scope.$apply();
+      }
+      else {
+        var messageData = {
+          type: 'others',
+          user: chatMessageData.user,
+          content: chatMessageData.content
+        };
+      }
+      messages.push(messageData);
       $scope.$apply(); // to let Angular know that scope has changed (for ng-repeat)
     }
 
     // Let people know user have joined
     if (chatMessageData.action == "join") {
-      var onUserJoinMessage = chatMessageData.sender + " has joined the room.";
-      messages.push(onUserJoinMessage);
+      var messageData = {
+        type: 'join',
+        content: chatMessageData.user + " has joined the room."
+      };
+      messages.push(messageData);
       $scope.$apply();
     }
 
     if (chatMessageData.action == "leave") {
-      var onUserLeaveMessage = chatMessageData.sender + " has left the room.";
-      messages.push(onUserLeaveMessage);
+      var messageData = {
+        type: 'leave',
+        content: chatMessageData.user + " has left the room."
+      };
+      messages.push(messageData);
       $scope.$apply();
     }
 

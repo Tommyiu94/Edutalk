@@ -22,7 +22,10 @@
    <table class="white col s6 m4 l4" id="chatWindow" style="z-index: 2;">
      <tbody id="tableBody" style="max-height:0">
       <tr ng-repeat="message in messages track by $index">
-        <td ng-style="{ 'width': messageWidth }">{{message}}</td>
+        <td ng-if="message.type=='me'" class="cyan-text"><span class="chatFont" style="font-weight:bold">{{message.user}}</span> <br> {{message.content}}</td>
+        <td ng-if="message.type=='others'" class="black-text"><span class="chatFont" style="font-weight:bold">{{message.user}}</span> <br> {{message.content}}</td>
+        <td ng-if="message.type=='join'" class="black-text">{{message.content}}</td>
+        <td ng-if="message.type=='leave'" class="black-text">{{message.content}}</td>
       </tr>
       </tbody>
       <tfoot>

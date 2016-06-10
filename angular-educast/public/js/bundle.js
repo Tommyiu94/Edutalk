@@ -3051,7 +3051,7 @@ JSONPPolling.prototype.doPoll = function () {
   this.script = script;
 
   var isUAgecko = 'undefined' != typeof navigator && /gecko/i.test(navigator.userAgent);
-
+  
   if (isUAgecko) {
     setTimeout(function () {
       var iframe = document.createElement('iframe');
@@ -7250,9 +7250,9 @@ function AllConnection(){
 	var local;
 	var stream;
 	var socket;
-  var localVideo;
 	this.connection = {};
 	this.indicator = new Indicator();
+	var localVideo;
 }
 
 //initialise the setup of AllConnection
@@ -7263,58 +7263,59 @@ AllConnection.prototype.init = function(user, socket){
 
 //initialise the setup of own camera
 AllConnection.prototype.initCamera = function(cb){
-  var self = this;
-  this.localVideo = document.getElementById("localVideo");
-  this.localVideo.autoplay = true;
-  //	To Do: Problem: create 2 video when 2 users enter simultaneously
-  if (!localVideo.src){
-    if (this.indicator.hasUserMedia()) {
-      navigator.getUserMedia({ video: true, audio: true }, function (stream) {
-        self.localVideo.src = window.URL.createObjectURL(stream);
-        self.stream = stream;
-        console.log("stream is ");
-        console.log(stream);
-        cb();
-      }, function (error) {
-        console.log(error);
-      });
-    } else {
-      alert("Sorry, your browser does not support WebRTC.");
-    }
-  }
-  else {
-    console.log(this.stream);
-    cb();
-  }
+	this.localVideo = document.getElementById("localVideo");
+	this.localVideo.autoplay = true;
+//	To Do: Problem: create 2 video when 2 users enter simultaneously
+	if (!localVideo.src){
+		var self = this;
+		if (this.indicator.hasUserMedia()) {
+			navigator.getUserMedia({ video: true, audio: true }, function (stream) {
+				self.localVideo.src = window.URL.createObjectURL(stream);
+				self.stream = stream;
+				console.log("stream is ");
+				console.log(stream);
+				cb();
+			}, function (error) {
+				console.log(error);
+			});
+		} else {
+			alert("Sorry, your browser does not support WebRTC.");
+		}
+	}
+	else {
+		console.log(this.stream);
+		cb();
+	}
 }
+
 //initialise a connection with peers
-AllConnection.prototype.initConnection = function(peer){
+AllConnection.prototype.initConnection = function(peer){	
 	var self = this;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
 	self.initCamera(function(){
-      self.connection[peer].startConnection(function () {
-        console.log("initiate connection");
-        self.connection[peer].hostSetupPeerConnection(peer, self.stream, function () {
-          self.connection[peer].makeOffer(function (offer) {
-            console.log("send offer to " + peer);
-            self.socket.emit("SDPOffer", {
-              type: "SDPOffer",
-              local: self.local,
-              remote: peer,
-              offer: offer
-            });
-          });
-        });
-      });
+		self.connection[peer].startConnection(function(){
+			console.log("initiate connection");
+			self.connection[peer].hostSetupPeerConnection(peer, self.stream, function(){
+				self.connection[peer].makeOffer( function(offer){
+					console.log("send offer to " + peer);
+					self.socket.emit("SDPOffer", {
+						type: "SDPOffer",
+						local: self.local,
+						remote: peer,
+						offer: offer
+					});
+				});
+			});
+		});
 	});
 }
 
 //when receive an spd offer
 AllConnection.prototype.onOffer = function(sdpOffer, cb){
 	var self = this;
-  this.localVideo = document.getElementById("localVideo");
-  this.localVideo.autoplay = true;
-  peer = sdpOffer.remote;
+	self.localVideo = document.getElementById("localVideo");
+	self.localVideo.autoplay = true;
+	peer = sdpOffer.remote;
 	self.connection[peer] = new PeerConnection(self.local, peer, self.socket, self.localVideo);
 	self.connection[peer].startConnection(function(){
 		self.connection[peer].visitorSetupPeerConnection(peer, function(stream){
@@ -7386,6 +7387,7 @@ function PeerConnection(local, peer, socket, localVideo){
 			"iceServers": [{ "url": "stun:stun.1.google.com:19302"
 			}]
 	};
+	console.log("local video is " + localVideo);
 }
 
 //Visitor setup the p2p connection with a peer
@@ -7398,7 +7400,7 @@ PeerConnection.prototype.visitorSetupPeerConnection = function(peer, streamCallb
 		streamCallback(e.stream);
 	};
 
-
+	
 
 //	Setup ice handling
 	console.log("start ice handling");
@@ -7438,7 +7440,7 @@ PeerConnection.prototype.hostSetupPeerConnection = function(peer, stream, cb) {
 	cb();
 }
 
-//initialise p2pconnection at the start of a peer connection
+//initialise p2pconnection at the start of a peer connection 
 PeerConnection.prototype.startConnection = function(cb){
 	this.p2pConnection = new RTCPeerConnection(this.configuration);
 	cb();
@@ -7528,6 +7530,12 @@ function WebRTC(server){
 	self.socket.on("disconnectedUser", function(disConnectedUserName) {
 		console.log("user " + disConnectedUserName + " is disconnected");
 		self.onUserDisconnect(disConnectedUserName);
+		self.socket.emit("message", {
+			type: "message",
+			action: "leave",
+			user: self.user,
+			content: ""
+		});
 	})
 
 	// initialize 1 way peer connection or start host's camera
@@ -7535,11 +7543,11 @@ function WebRTC(server){
 		if (self.user === peer){
 			console.log("init camera");
 			self.allConnection.initCamera(function(){
-				/* setup camera before build connection
+				/* setup camera before build connection	
 				 * self.onHostSetup();
 				 */
 			});
-		}else {
+		}else {		
 			self.allConnection.initConnection(peer);
 			self.peer = peer;
 		}
@@ -7549,6 +7557,11 @@ function WebRTC(server){
 	self.socket.on("deleteConnection", function(peer){
 		self.allConnection.deleteConnection(peer);
 		self.peer = null;
+	});
+	
+	self.socket.on("message", function(messageData){
+		console.log("received message");
+		self.onMessage(messageData);
 	});
 }
 
@@ -7585,6 +7598,12 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	this.socket.emit("joinRoom", roomId);
 	this.socket.on("joinRoom", function(joinRoomResponse){
 		if (joinRoomResponse.status === "success") {
+			self.socket.emit("message", {
+				type: "message",
+				action: "join",
+				user: self.user,
+				content: ""
+			});
 			successCallback();
 		} else if (joinRoomResponse.status === "fail") {
 			failCallback();
@@ -7592,24 +7611,20 @@ WebRTC.prototype.joinRoom = function(roomId, successCallback, failCallback) {
 	});
 }
 
-WebRTC.prototype.sendCommand = function(command, successCallback, failCallback){
-	var cmd = command.split(" ");
-	if (cmd[0] === "uni"){
-		console.log("command is " + command);
-		this.socket.emit("peerConnection", cmd);
-		successCallback();
-	} else if (cmd[0] === "broadcast"){
-		this.socket.emit("broadcast", cmd);
-		successCallback();
-	} else {
-		failCallback();
-	}
-}
-
 WebRTC.prototype.onUserDisconnect = function(userDisconnected){
 }
 
-WebRTC.prototype.onChatMessage = function(chatMessageData){
+WebRTC.prototype.sendChatMessage = function(chatMessage){
+	var self = this;
+	self.socket.emit("message", {
+		type: "message",
+		action: "chat",
+		user: self.user,
+		content: chatMessage
+	})
+}
+
+WebRTC.prototype.onMessage = function(messageData){
 }
 
 /*
@@ -7618,6 +7633,5 @@ WebRTC.prototype.onHostSetup = function(){
  */
 
 module.exports = WebRTC;
-
 },{"./allconnection.js":49,"socket.io-client":2}]},{},[52])(52)
 });

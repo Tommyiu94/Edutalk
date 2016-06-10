@@ -105,3 +105,13 @@ tbody {
 .row {
     margin-bottom: 0px;
 }
+
+.chatFont {
+    font-size: 1.20em;
+    line-height: 110%;
+    margin: -1.18rem 0 0.3rem 0;
+}
+
+td, th {
+    padding: 7px 5px;
+}
