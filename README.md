@@ -8,6 +8,13 @@ This is a webrtc powered video conference website.
 npm install
 ```
 
+## Running
+
+```
+node signalServer.js
+node server.js
+```
+
 ## Contributing
 
 1. Fork it!
